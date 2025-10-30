@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Genel -->
+    <string name="app_name">MODAI</string>
+    <string name="app_tagline">AI-Powered Life Management</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_modules">Modules</string>
+    <string name="nav_store">Store</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_greeting">Hello, %s</string>
+    <string name="dashboard_today">Today, %s</string>
+    <string name="dashboard_current_status">Current Status</string>
+    <string name="dashboard_my_modules">My Modules</string>
+    <string name="dashboard_add_new_module">Add New Module</string>
+    <string name="dashboard_premium_teaser_title">🤖 Try AI Coach</string>
+    <string name="dashboard_premium_teaser_desc">Upgrade to premium for personalized recommendations and detailed analysis!</string>
+    <string name="dashboard_premium_explore">Explore Premium</string>
+
+    <!-- Common -->
+    <string name="habits_dashboard">Habits</string>
+    <string name="today_overview">Today\'s Overview</string>
+    <string name="default_user_name">User</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_save">Save</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_delete">Delete</string>
+    <string name="dialog_confirm">Confirm</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_profile">Profile</string>
+    <string name="settings_username">Username</string>
+    <string name="settings_app">Application</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_version_number">1.0.0</string>
+    <string name="settings_rate_app">Rate App</string>
+    <string name="settings_rate_app_desc">Leave a review on Google Play</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_clear_all_data">Clear All Data</string>
+    <string name="settings_clear_all_data_desc">Delete habits, notes and transactions</string>
+    <string name="settings_about">About</string>
+    <string name="settings_made_with_love">Made with ❤️</string>
+    <string name="settings_back">Back</string>
+    <string name="settings_name_dialog_title">Username</string>
+    <string name="settings_name_dialog_label">Your Name</string>
+    <string name="settings_clear_data_confirm">Delete</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="clear_data_title">Clear All Data?</string>
+    <string name="clear_data_message">This cannot be undone!</string>
+
+    <!-- Store -->
+    <string name="store_title">Store</string>
+    <string name="store_back">Back</string>
+
+    <!-- Modules -->
+    <string name="modules_title">All Modules</string>
+    <string name="modules_go_to_habits">Go to Habits</string>
+    <string name="modules_go_to_notes">Go to Notes</string>
+    <string name="modules_back">Back</string>
+
+    <!-- Water Module -->
+    <string name="water_tracker_title">Water Tracker</string>
+    <string name="water_target">Target %dml</string>
+    <string name="add_water">Add Water</string>
+    <string name="daily_stats">Daily Stats</string>
+    <string name="recent_activities">Recent Activities</string>
+    <string name="reminders">Reminders</string>
+    <string name="reminder_on">On</string>
+    <string name="reminder_off">Off</string>
+    <string name="cd_statistics">Statistics</string>
+    <string name="cd_settings">Settings</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_water_drop">Water drop</string>
+
+    <!-- Widget Labels and Descriptions -->
+    <string name="finance_widget_label">Finance</string>
+    <string name="finance_widget_description">Track your income and expenses</string>
+    <string name="habit_widget_label">Habits</string>
+    <string name="widget_description">Track your daily habits</string>
+    <string name="notes_widget_label">Notes</string>
+    <string name="notes_widget_description">Quick notes widget</string>
+
+    <!-- Notes Screen Strings -->
+    <string name="notes_title">Notes</string>
+    <string name="notes_add_new">Add New Note</string>
+    <string name="notes_empty_state">No notes yet</string>
+    <string name="notes_delete">Delete</string>
+    <string name="notes_edit">Edit Note</string>
+    <string name="notes_title_hint">Title</string>
+    <string name="notes_content_hint">Content</string>
+    <string name="notes_save">Save</string>
+    <string name="notes_cancel">Cancel</string>
+
+    <!-- Pomodoro Screen Strings -->
+    <string name="pomodoro_title">Pomodoro Timer</string>
+    <string name="pomodoro_work_time">Work Time</string>
+    <string name="pomodoro_break_time">Break Time</string>
+    <string name="pomodoro_start">Start</string>
+    <string name="pomodoro_stop">Stop</string>
+    <string name="pomodoro_reset">Reset</string>
+    <string name="finance_back">Back</string>
+</resources>

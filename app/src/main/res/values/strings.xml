@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Genel -->
+    <string name="app_name">MODAI</string>
+    <string name="app_tagline">AI Destekli Yaşam Yönetimi</string>
+
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Ana Sayfa</string>
+    <string name="nav_modules">Modlar</string>
+    <string name="nav_store">Mağaza</string>
+    <string name="nav_settings">Ayarlar</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_greeting">Merhaba, %s</string>
+    <string name="dashboard_today">Bugün, %s</string>
+    <string name="dashboard_current_status">Güncel Durum</string>
+    <string name="dashboard_my_modules">Modlarım</string>
+    <string name="dashboard_add_new_module">Yeni Mod Ekle</string>
+    <string name="dashboard_premium_teaser_title">🤖 AI Coach\'u Dene</string>
+    <string name="dashboard_premium_teaser_desc">Kişiselleştirilmiş öneriler ve detaylı analiz için premium\'a geç!</string>
+    <string name="dashboard_premium_explore">Premium\'u Keşfet</string>
+
+    <!-- Common -->
+    <string name="habits_dashboard">Alışkanlıklar</string>
+    <string name="today_overview">Bugünkü Özet</string>
+    <string name="default_user_name">Kullanıcı</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_save">Kaydet</string>
+    <string name="dialog_cancel">İptal</string>
+    <string name="dialog_delete">Sil</string>
+    <string name="dialog_confirm">Onayla</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ayarlar</string>
+    <string name="settings_profile">Profil</string>
+    <string name="settings_username">Kullanıcı Adı</string>
+    <string name="settings_app">Uygulama</string>
+    <string name="settings_version">Versiyon</string>
+    <string name="settings_version_number">1.0.0</string>
+    <string name="settings_rate_app">Uygulamayı Değerlendir</string>
+    <string name="settings_rate_app_desc">Google Play\'de yorum bırak</string>
+    <string name="settings_data">Veri</string>
+    <string name="settings_clear_all_data">Tüm Verileri Sil</string>
+    <string name="settings_clear_all_data_desc">Alışkanlıklar, notlar ve işlemleri sil</string>
+    <string name="settings_about">Hakkında</string>
+    <string name="settings_made_with_love">Made with ❤️</string>
+    <string name="settings_back">Geri</string>
+    <string name="settings_name_dialog_title">Kullanıcı Adı</string>
+    <string name="settings_name_dialog_label">Adınız</string>
+    <string name="settings_clear_data_confirm">Sil</string>
+    <string name="settings_notifications">Bildirimler</string>
+    <string name="clear_data_title">Tüm Verileri Sil?</string>
+    <string name="clear_data_message">Bu işlem geri alınamaz!</string>
+
+    <!-- Store -->
+    <string name="store_title">Mağaza</string>
+    <string name="store_back">Geri</string>
+
+    <!-- Modules -->
+    <string name="modules_title">Tüm Modüller</string>
+    <string name="modules_go_to_habits">Alışkanlıklara Git</string>
+    <string name="modules_go_to_notes">Notlara Git</string>
+    <string name="modules_back">Geri</string>
+
+    <!-- Water Module -->
+    <string name="water_tracker_title">Su İçimi</string>
+    <string name="water_target">Hedef %dml</string>
+    <string name="add_water">Su Ekle</string>
+    <string name="daily_stats">Günlük İstatistik</string>
+    <string name="recent_activities">Son Kayıtlar</string>
+    <string name="reminders">Hatırlatıcılar</string>
+    <string name="reminder_on">Açık</string>
+    <string name="reminder_off">Kapalı</string>
+    <string name="cd_statistics">İstatistikler</string>
+    <string name="cd_settings">Ayarlar</string>
+    <string name="cd_back">Geri</string>
+    <string name="cd_water_drop">Su damlası</string>
+
+    <!-- Widget Labels and Descriptions -->
+    <string name="finance_widget_label">Finans</string>
+    <string name="finance_widget_description">Gelir ve giderlerinizi takip edin</string>
+    <string name="habit_widget_label">Alışkanlıklar</string>
+    <string name="widget_description">Günlük alışkanlıklarınızı takip edin</string>
+    <string name="notes_widget_label">Notlar</string>
+    <string name="notes_widget_description">Hızlı notlar widget\'ı</string>
+
+    <!-- Notes Screen Strings -->
+    <string name="notes_title">Notlar</string>
+    <string name="notes_add_new">Yeni Not Ekle</string>
+    <string name="notes_empty_state">Henüz not yok</string>
+    <string name="notes_delete">Sil</string>
+    <string name="notes_edit">Notu Düzenle</string>
+    <string name="notes_title_hint">Başlık</string>
+    <string name="notes_content_hint">İçerik</string>
+    <string name="notes_save">Kaydet</string>
+    <string name="notes_cancel">İptal</string>
+
+    <!-- Pomodoro Screen Strings -->
+    <string name="pomodoro_title">Pomodoro Zamanlayıcı</string>
+    <string name="pomodoro_work_time">Çalışma Süresi</string>
+    <string name="pomodoro_break_time">Mola Süresi</string>
+    <string name="pomodoro_start">Başlat</string>
+    <string name="pomodoro_stop">Durdur</string>
+    <string name="pomodoro_reset">Sıfırla</string>
+    <string name="finance_back">Geri</string>
+</resources>

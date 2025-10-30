@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#1F2937"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/widget_finance_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="💰 Bakiye"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF" />
+
+    <TextView
+        android:id="@+id/widget_finance_balance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="₺0,00"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/widget_finance_income"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gelir: ₺0"
+        android:textSize="14sp"
+        android:textColor="#10B981"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/widget_finance_expense"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gider: ₺0"
+        android:textSize="14sp"
+        android:textColor="#EF4444"
+        android:layout_marginTop="4dp" />
+
+    <Button
+        android:id="@+id/widget_finance_refresh_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Yenile"
+        android:textSize="12sp"
+        android:layout_marginTop="12dp" />
+
+</LinearLayout>

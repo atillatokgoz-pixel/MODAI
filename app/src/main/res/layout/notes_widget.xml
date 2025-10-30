@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/notes_widget_background"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/widget_notes_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="📝 Notlarım"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/widget_notes_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        android:textColor="#FF9800" />
+
+    <TextView
+        android:id="@+id/widget_notes_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Toplam Not"
+        android:textSize="14sp"
+        android:textColor="#CCCCCC"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/widget_notes_latest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Son not: -"
+        android:textSize="12sp"
+        android:textColor="#AAAAAA"
+        android:layout_marginTop="12dp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <Button
+        android:id="@+id/widget_notes_refresh_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Yenile"
+        android:textSize="12sp"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="#FF9800" />
+
+</LinearLayout>
