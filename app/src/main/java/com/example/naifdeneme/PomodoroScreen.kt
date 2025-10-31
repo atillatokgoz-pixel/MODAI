@@ -16,7 +16,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -263,6 +262,33 @@ fun PomodoroScreen(onBack: () -> Unit) {
                 }
             }
 
+            // 🆕 HIZLI SÜRE BUTONLARI - Timer circle altına ekle
+            if (!isRunning) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    QuickTimeButton(
+                        text = "15 dk",
+                        minutes = 15,
+                        isWorkSession = isWorkSession,
+                        onClick = { minutes -> timeLeft = minutes * 60 }
+                    )
+                    QuickTimeButton(
+                        text = "25 dk",
+                        minutes = 25,
+                        isWorkSession = isWorkSession,
+                        onClick = { minutes -> timeLeft = minutes * 60 }
+                    )
+                    QuickTimeButton(
+                        text = "45 dk",
+                        minutes = 45,
+                        isWorkSession = isWorkSession,
+                        onClick = { minutes -> timeLeft = minutes * 60 }
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.weight(1f))
 
             // Control buttons
@@ -385,6 +411,37 @@ fun PomodoroScreen(onBack: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+/**
+ * 🆕 Hızlı süre butonu component'i
+ */
+@Composable
+fun QuickTimeButton(
+    text: String,
+    minutes: Int,
+    isWorkSession: Boolean,
+    onClick: (Int) -> Unit
+) {
+    TextButton(
+        onClick = { onClick(minutes) },
+        colors = ButtonDefaults.textButtonColors(
+            containerColor = if (isWorkSession)
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            else
+                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f),
+            contentColor = if (isWorkSession)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.tertiary
+        )
+    ) {
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 

@@ -137,6 +137,14 @@ fun SimpleDashboardScreen(
     onPomodoroClick: () -> Unit,
     onWaterClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val prefsManager = remember { PreferencesManager.getInstance(context) }
+    var userName by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        userName = prefsManager.getUserNameImmediate()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -144,6 +152,14 @@ fun SimpleDashboardScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Kullanıcı adını ekle
+        Text(
+            text = "Merhaba, $userName! 👋",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
         Text(
             text = "MODAI",
             style = MaterialTheme.typography.headlineLarge,

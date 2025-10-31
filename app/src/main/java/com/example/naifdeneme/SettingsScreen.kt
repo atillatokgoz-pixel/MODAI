@@ -21,19 +21,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.naifdeneme.database.AppDatabase
-import com.example.naifdeneme.ui.theme.currentAppSettings
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val prefsManager = remember { PreferencesManager.getInstance(context) }
-    val appSettings = currentAppSettings()
 
     val scope = rememberCoroutineScope()
     val database = remember { AppDatabase.getDatabase(context) }
 
+    // Tema ve dil state'lerini burada yönetiyoruz
     var userName by remember { mutableStateOf("") }
+    var isDarkMode by remember { mutableStateOf(false) }
+    var language by remember { mutableStateOf("tr") }
+
     var showNameDialog by remember { mutableStateOf(false) }
     var showClearDataDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
@@ -41,9 +44,23 @@ fun SettingsScreen(onBack: () -> Unit) {
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Load user name from DataStore
+    // DataStore'dan ayarları yükle ve dinle
     LaunchedEffect(Unit) {
+        // İlk yükleme
         userName = prefsManager.getUserNameImmediate()
+        isDarkMode = prefsManager.isDarkMode.first()
+        language = prefsManager.language.first()
+
+        // Real-time updates
+        prefsManager.userName.collectLatest { name ->
+            userName = name
+        }
+        prefsManager.isDarkMode.collectLatest { darkMode ->
+            isDarkMode = darkMode
+        }
+        prefsManager.language.collectLatest { lang ->
+            language = lang
+        }
     }
 
     val testPermissionLauncher = rememberLauncherForActivityResult(
@@ -97,14 +114,14 @@ fun SettingsScreen(onBack: () -> Unit) {
                 SettingsItem(
                     icon = Icons.Default.Settings,
                     title = "Tema",
-                    subtitle = if (appSettings.isDarkMode) "Koyu" else "Açık",
+                    subtitle = if (isDarkMode) "Koyu" else "Açık",
                     onClick = { showThemeDialog = true }
                 )
 
                 SettingsItem(
                     icon = Icons.Default.Info,
                     title = "Dil",
-                    subtitle = when (appSettings.language) {
+                    subtitle = when (language) {
                         "tr" -> "Türkçe"
                         "en" -> "English"
                         else -> "Türkçe"
@@ -265,7 +282,6 @@ fun SettingsScreen(onBack: () -> Unit) {
             onSave = { newName ->
                 scope.launch {
                     prefsManager.setUserName(newName)
-                    userName = newName
                 }
                 showNameDialog = false
             }
@@ -274,7 +290,7 @@ fun SettingsScreen(onBack: () -> Unit) {
 
     if (showThemeDialog) {
         ThemeDialog(
-            currentTheme = appSettings.isDarkMode,
+            currentTheme = isDarkMode,
             onDismiss = { showThemeDialog = false },
             onThemeChange = { isDarkMode ->
                 scope.launch {
@@ -287,11 +303,11 @@ fun SettingsScreen(onBack: () -> Unit) {
 
     if (showLanguageDialog) {
         LanguageDialog(
-            currentLanguage = appSettings.language,
+            currentLanguage = language,
             onDismiss = { showLanguageDialog = false },
-            onLanguageChange = { language ->
+            onLanguageChange = { newLanguage ->
                 scope.launch {
-                    prefsManager.setLanguage(language)
+                    prefsManager.setLanguage(newLanguage)
                 }
                 showLanguageDialog = false
             }
@@ -310,7 +326,10 @@ fun SettingsScreen(onBack: () -> Unit) {
                         scope.launch {
                             database.clearAllTables()
                             prefsManager.clearAll()
+                            // State'leri sıfırla
                             userName = prefsManager.getUserNameImmediate()
+                            isDarkMode = prefsManager.isDarkMode.first()
+                            language = prefsManager.language.first()
                         }
                         showClearDataDialog = false
                     }
@@ -326,6 +345,9 @@ fun SettingsScreen(onBack: () -> Unit) {
         )
     }
 }
+
+// ThemeDialog ve LanguageDialog aynı kalıyor...
+// [Aynı ThemeDialog, LanguageDialog, ThemeOption, LanguageOption, Section, SettingsItem, NameDialog kodları]
 
 @Composable
 fun ThemeDialog(
