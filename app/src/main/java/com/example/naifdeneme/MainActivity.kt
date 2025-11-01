@@ -17,15 +17,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.naifdeneme.ui.screens.MainScreen
 import com.example.naifdeneme.ui.screens.finance.FinanceScreen
 import com.example.naifdeneme.ui.screens.water.WaterTrackerScreen
 import com.example.naifdeneme.ui.theme.ModaiTheme
@@ -69,60 +73,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation()
+                    MainScreen()
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun AppNavigation() {
-    val navController = rememberNavController()
-
-    NavHost(
-        navController = navController,
-        startDestination = "dashboard"
-    ) {
-        composable("dashboard") {
-            SimpleDashboardScreen(
-                onSettingsClick = { navController.navigate("settings") },
-                onHabitClick = { navController.navigate("habits") },
-                onNotesClick = { navController.navigate("notes") },
-                onFinanceClick = { navController.navigate("finance") },
-                onPomodoroClick = { navController.navigate("pomodoro") },
-                onWaterClick = { navController.navigate("water") }
-            )
-        }
-
-        composable("habits") {
-            HabitScreen(onNavigateToDetail = { habitId ->
-                // TODO: Habit detail ekranına yönlendirme
-            })
-        }
-
-        composable("notes") {
-            NotesScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable("finance") {
-            FinanceScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable("pomodoro") {
-            PomodoroScreen(onBack = { navController.popBackStack() })
-        }
-
-        composable("water") {
-            WaterTrackerScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToSettings = { navController.navigate("settings") },
-                onNavigateToHistory = { /* sonra ekleriz */ }
-            )
-        }
-
-        composable("settings") {
-            SettingsScreen(onBack = { navController.popBackStack() })
         }
     }
 }

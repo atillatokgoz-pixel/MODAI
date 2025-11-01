@@ -45,86 +45,52 @@ val LocalAppSettings = staticCompositionLocalOf { AppSettings() }
 // LIGHT COLOR SCHEME
 // ============================================
 private val LightColorScheme = lightColorScheme(
-    // Primary colors
-    primary = PrimarySky,
-    onPrimary = TextPrimaryLight,
-    primaryContainer = AccentSky,
-    onPrimaryContainer = TextPrimaryLight,
-
-    // Secondary colors (Mint accent)
-    secondary = AccentMint,
-    onSecondary = TextPrimaryLight,
-    secondaryContainer = AccentMint,
-    onSecondaryContainer = TextPrimaryLight,
-
-    // Tertiary colors (Blush accent)
-    tertiary = AccentBlush,
-    onTertiary = TextPrimaryLight,
-    tertiaryContainer = AccentBlush,
-    onTertiaryContainer = TextPrimaryLight,
-
-    // Background
-    background = BackgroundLight,
-    onBackground = TextPrimaryLight,
-
-    // Surface
-    surface = SurfaceLight,
-    onSurface = TextPrimaryLight,
-    surfaceVariant = SubtleLight,
-    onSurfaceVariant = TextSecondaryLight,
-
-    // Border
-    outline = BorderLight,
-    outlineVariant = SubtleLight,
-
-    // Error
-    error = ErrorRed,
-    onError = SurfaceLight,
-    errorContainer = ErrorRed,
-    onErrorContainer = TextPrimaryLight
+    primary = LightPrimary,
+    onPrimary = LightOnPrimary,
+    primaryContainer = LightPrimaryContainer,
+    onPrimaryContainer = LightOnPrimaryContainer,
+    secondary = LightSecondary,
+    onSecondary = LightOnSecondary,
+    secondaryContainer = LightSecondaryContainer,
+    onSecondaryContainer = LightOnSecondaryContainer,
+    tertiary = AccentMint,
+    background = LightBackground,
+    onBackground = LightOnBackground,
+    surface = LightSurface,
+    onSurface = LightOnSurface,
+    surfaceVariant = SurfaceVariantLight,
+    error = Error,
+    onError = OnError,
+    errorContainer = ErrorContainer,
+    onErrorContainer = OnErrorContainer,
+    outline = Outline,
+    outlineVariant = OutlineVariant
 )
 
 // ============================================
 // DARK COLOR SCHEME
 // ============================================
 private val DarkColorScheme = darkColorScheme(
-    // Primary colors (Neon cyan)
-    primary = PrimaryCyan,
-    onPrimary = BackgroundDark,
-    primaryContainer = NeonAqua,
-    onPrimaryContainer = TextPrimaryDark,
-
-    // Secondary colors (Lime)
-    secondary = NeonLime,
-    onSecondary = BackgroundDark,
-    secondaryContainer = NeonLime,
-    onSecondaryContainer = TextPrimaryDark,
-
-    // Tertiary colors (Magenta)
-    tertiary = NeonMagenta,
-    onTertiary = BackgroundDark,
-    tertiaryContainer = NeonMagenta,
-    onTertiaryContainer = TextPrimaryDark,
-
-    // Background
-    background = BackgroundDark,
-    onBackground = TextPrimaryDark,
-
-    // Surface
-    surface = SurfaceDark,
-    onSurface = TextPrimaryDark,
-    surfaceVariant = SubtleDark,
-    onSurfaceVariant = TextSecondaryDark,
-
-    // Border
+    primary = DarkPrimary,
+    onPrimary = DarkOnPrimary,
+    primaryContainer = DarkPrimaryContainer,
+    onPrimaryContainer = DarkOnPrimaryContainer,
+    secondary = DarkSecondary,
+    onSecondary = DarkOnSecondary,
+    secondaryContainer = DarkSecondaryContainer,
+    onSecondaryContainer = DarkOnSecondaryContainer,
+    tertiary = AccentSky,
+    background = DarkBackground,
+    onBackground = DarkOnBackground,
+    surface = DarkSurface,
+    onSurface = DarkOnSurface,
+    surfaceVariant = SurfaceVariantDark,
+    error = Error,
+    onError = OnError,
+    errorContainer = ErrorContainer,
+    onErrorContainer = OnErrorContainer,
     outline = BorderDark,
-    outlineVariant = SubtleDark,
-
-    // Error
-    error = ErrorRed,
-    onError = BackgroundDark,
-    errorContainer = ErrorRed,
-    onErrorContainer = TextPrimaryDark
+    outlineVariant = OutlineVariant
 )
 
 // ============================================
@@ -174,7 +140,7 @@ fun ModaiTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
+            window.statusBarColor = colorScheme.primary.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !useDarkTheme
         }
     }
@@ -184,7 +150,7 @@ fun ModaiTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = ModaiTypography,
+            typography = Typography,
             content = content
         )
     }

@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.sp
 import com.example.naifdeneme.database.AppDatabase
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
+
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {

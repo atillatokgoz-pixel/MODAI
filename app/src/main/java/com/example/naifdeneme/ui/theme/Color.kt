@@ -10,8 +10,8 @@ import androidx.compose.ui.graphics.Color
 // ============================================
 // PRIMARY COLORS (Aqua/Cyan - Ana Marka Rengi)
 // ============================================
-val PrimaryCyan = Color(0xFF06F9F9)        // Neon cyan (dark mode için)
 val PrimarySky = Color(0xFF87CEEB)         // Pastel sky blue (light mode için)
+val PrimaryCyan = Color(0xFF06F9F9)        // Neon cyan (dark mode için)
 
 // ============================================
 // BACKGROUND COLORS
@@ -86,3 +86,48 @@ val ToggleActive = AccentMint
 // Shadow Colors (for elevation)
 val ShadowLight = Color(0x0D000000)  // rgba(0,0,0,0.05)
 val ShadowDark = Color(0x33000000)   // rgba(0,0,0,0.2)
+
+// ============================================
+// MATERIAL 3 COLOR SCHEME RENKLERİ
+// ============================================
+val LightPrimary = PrimarySky
+val LightOnPrimary = Color(0xFFFFFFFF)
+val LightPrimaryContainer = Color(0xFFC6E7FF)
+val LightOnPrimaryContainer = Color(0xFF001E2E)
+
+val LightSecondary = Color(0xFF4F616E)
+val LightOnSecondary = Color(0xFFFFFFFF)
+val LightSecondaryContainer = Color(0xFFD2E5F4)
+val LightOnSecondaryContainer = Color(0xFF0B1D29)
+
+val LightBackground = BackgroundLight
+val LightOnBackground = TextPrimaryLight
+val LightSurface = SurfaceLight
+val LightOnSurface = TextPrimaryLight
+
+val DarkPrimary = PrimaryCyan
+val DarkOnPrimary = Color(0xFF003544)
+val DarkPrimaryContainer = Color(0xFF004D61)
+val DarkOnPrimaryContainer = Color(0xFFA7ECFF)
+
+val DarkSecondary = Color(0xFFB6C9D8)
+val DarkOnSecondary = Color(0xFF21323F)
+val DarkSecondaryContainer = Color(0xFF384956)
+val DarkOnSecondaryContainer = Color(0xFFD2E5F4)
+
+val DarkBackground = BackgroundDark
+val DarkOnBackground = TextPrimaryDark
+val DarkSurface = SurfaceDark
+val DarkOnSurface = TextPrimaryDark
+
+// Common Colors (Error states vb.)
+val Error = ErrorRed
+val OnError = Color(0xFFFFFFFF)
+val ErrorContainer = Color(0xFFFFDAD6)
+val OnErrorContainer = Color(0xFF410002)
+
+val Outline = BorderLight
+val OutlineVariant = Color(0xFFC8C7CC)
+
+val SurfaceVariantLight = SubtleLight
+val SurfaceVariantDark = SubtleDark
