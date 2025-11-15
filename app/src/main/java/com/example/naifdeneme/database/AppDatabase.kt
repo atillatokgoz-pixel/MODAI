@@ -10,9 +10,11 @@ import androidx.room.RoomDatabase
         HabitEntity::class,
         NotesEntity::class,
         TransactionEntity::class,
-        PomodoroEntity::class
+        PomodoroEntity::class,
+        WaterEntryEntity::class,
+        MedicineEntity::class  // ✅ YENİ EKLENDİ
     ],
-    version = 5,
+    version = 7,  // ✅ VERSION 6 → 7 (MedicineEntity eklendiği için)
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,6 +22,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun notesDao(): NotesDao
     abstract fun transactionDao(): TransactionDao
     abstract fun pomodoroDao(): PomodoroDao
+    abstract fun waterDao(): WaterDao
+    abstract fun medicineDao(): MedicineDao  // ✅ YENİ EKLENDİ
 
     companion object {
         @Volatile
@@ -32,7 +36,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "modai_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration()  // ✅ Version artınca tablolar resetlenir
                     .build()
                 INSTANCE = instance
                 instance
