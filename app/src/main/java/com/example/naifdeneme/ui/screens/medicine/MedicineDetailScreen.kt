@@ -17,9 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.NotificationsActive
@@ -49,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -140,7 +139,7 @@ fun MedicineDetailScreen(
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2)),
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -196,11 +195,11 @@ fun MedicineDetailScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(1.dp)
-                                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2))
+                                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                                     .padding(horizontal = 16.dp)
                             )
 
-                            // Frequency Selection
+                            // Frequency Selection - SEGMENTED BUTON VERSİYONU
                             Column(
                                 modifier = Modifier.padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -210,6 +209,7 @@ fun MedicineDetailScreen(
                                     style = MaterialTheme.typography.bodyMedium
                                 )
 
+                                // STITCH TASARIMINA UYGUN SEGMENTED BUTON
                                 SingleChoiceSegmentedButtonRow(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
@@ -279,7 +279,7 @@ fun MedicineDetailScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(1.dp)
-                                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2))
+                                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                                     .padding(horizontal = 16.dp)
                             )
 
@@ -333,7 +333,7 @@ fun MedicineDetailScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(1.dp)
-                                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2))
+                                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                                     .padding(horizontal = 16.dp)
                             )
 
@@ -354,7 +354,7 @@ fun MedicineDetailScreen(
 
 @Composable
 private fun SettingRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     title: String,
     value: String,
     onClick: () -> Unit
@@ -398,7 +398,7 @@ private fun SettingRow(
 
 @Composable
 private fun SwitchSettingRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     title: String,
     isEnabled: Boolean,
     onToggle: (Boolean) -> Unit

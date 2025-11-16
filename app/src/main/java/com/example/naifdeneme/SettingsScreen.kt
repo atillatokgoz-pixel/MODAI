@@ -4,6 +4,7 @@ package com.example.naifdeneme
 
 import android.Manifest
 import android.os.Build
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -24,7 +25,6 @@ import com.example.naifdeneme.database.AppDatabase
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
-
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
@@ -112,21 +112,24 @@ fun SettingsScreen(onBack: () -> Unit) {
                 )
             }
 
-            Section(title = "Görünüm") {
+            Section(title = stringResource(R.string.settings_appearance)) {
                 SettingsItem(
                     icon = Icons.Default.Settings,
-                    title = "Tema",
-                    subtitle = if (isDarkMode) "Koyu" else "Açık",
+                    title = stringResource(R.string.settings_theme),
+                    subtitle = if (isDarkMode)
+                        stringResource(R.string.settings_dark_theme)
+                    else
+                        stringResource(R.string.settings_light_theme),
                     onClick = { showThemeDialog = true }
                 )
 
                 SettingsItem(
                     icon = Icons.Default.Info,
-                    title = "Dil",
+                    title = stringResource(R.string.settings_language),
                     subtitle = when (language) {
-                        "tr" -> "Türkçe"
-                        "en" -> "English"
-                        else -> "Türkçe"
+                        "tr" -> stringResource(R.string.settings_turkish)
+                        "en" -> stringResource(R.string.settings_english)
+                        else -> stringResource(R.string.settings_turkish)
                     },
                     onClick = { showLanguageDialog = true }
                 )
@@ -291,27 +294,173 @@ fun SettingsScreen(onBack: () -> Unit) {
     }
 
     if (showThemeDialog) {
-        ThemeDialog(
-            currentTheme = isDarkMode,
-            onDismiss = { showThemeDialog = false },
-            onThemeChange = { isDarkMode ->
-                scope.launch {
-                    prefsManager.setDarkMode(isDarkMode)
+        AlertDialog(
+            onDismissRequest = { showThemeDialog = false },
+            icon = { Icon(Icons.Default.Settings, null) },
+            title = { Text(stringResource(R.string.settings_theme)) },
+            text = {
+                Column {
+                    Surface(
+                        onClick = {
+                            scope.launch {
+                                prefsManager.setDarkMode(false)
+                            }
+                            showThemeDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = if (!isDarkMode) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "🌞 ${stringResource(R.string.settings_light_theme)}",
+                                fontSize = 16.sp,
+                                fontWeight = if (!isDarkMode) FontWeight.Bold else FontWeight.Normal,
+                                color = if (!isDarkMode) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                            )
+                            if (!isDarkMode) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        onClick = {
+                            scope.launch {
+                                prefsManager.setDarkMode(true)
+                            }
+                            showThemeDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = if (isDarkMode) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "🌙 ${stringResource(R.string.settings_dark_theme)}",
+                                fontSize = 16.sp,
+                                fontWeight = if (isDarkMode) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isDarkMode) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                            )
+                            if (isDarkMode) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
                 }
-                showThemeDialog = false
+            },
+            confirmButton = {
+                TextButton(onClick = { showThemeDialog = false }) {
+                    Text(stringResource(R.string.dialog_cancel))
+                }
             }
         )
     }
 
     if (showLanguageDialog) {
-        LanguageDialog(
-            currentLanguage = language,
-            onDismiss = { showLanguageDialog = false },
-            onLanguageChange = { newLanguage ->
-                scope.launch {
-                    prefsManager.setLanguage(newLanguage)
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            icon = { Icon(Icons.Default.Info, null) },
+            title = { Text(stringResource(R.string.settings_language)) },
+            text = {
+                Column {
+                    Surface(
+                        onClick = {
+                            scope.launch {
+                                prefsManager.setLanguage("tr")
+                            }
+                            // Activity'yi yeniden başlat
+                            (context as? ComponentActivity)?.recreate()
+                            showLanguageDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = if (language == "tr") MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "🇹🇷 ${stringResource(R.string.settings_turkish)}",
+                                fontSize = 16.sp,
+                                fontWeight = if (language == "tr") FontWeight.Bold else FontWeight.Normal,
+                                color = if (language == "tr") MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                            )
+                            if (language == "tr") {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        onClick = {
+                            scope.launch {
+                                prefsManager.setLanguage("en")
+                            }
+                            // Activity'yi yeniden başlat
+                            (context as? ComponentActivity)?.recreate()
+                            showLanguageDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = if (language == "en") MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "🇺🇸 ${stringResource(R.string.settings_english)}",
+                                fontSize = 16.sp,
+                                fontWeight = if (language == "en") FontWeight.Bold else FontWeight.Normal,
+                                color = if (language == "en") MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                            )
+                            if (language == "en") {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
                 }
-                showLanguageDialog = false
+            },
+            confirmButton = {
+                TextButton(onClick = { showLanguageDialog = false }) {
+                    Text(stringResource(R.string.dialog_cancel))
+                }
             }
         )
     }
@@ -345,157 +494,6 @@ fun SettingsScreen(onBack: () -> Unit) {
                 }
             }
         )
-    }
-}
-
-// ThemeDialog ve LanguageDialog aynı kalıyor...
-// [Aynı ThemeDialog, LanguageDialog, ThemeOption, LanguageOption, Section, SettingsItem, NameDialog kodları]
-
-@Composable
-fun ThemeDialog(
-    currentTheme: Boolean,
-    onDismiss: () -> Unit,
-    onThemeChange: (Boolean) -> Unit
-) {
-    var selectedTheme by remember { mutableStateOf(currentTheme) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Default.Settings, null) },
-        title = { Text("Tema Seçimi") },
-        text = {
-            Column {
-                ThemeOption(
-                    title = "🌞 Açık Tema",
-                    selected = !selectedTheme,
-                    onClick = { selectedTheme = false }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                ThemeOption(
-                    title = "🌙 Koyu Tema",
-                    selected = selectedTheme,
-                    onClick = { selectedTheme = true }
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onThemeChange(selectedTheme) }
-            ) {
-                Text("Uygula")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_cancel))
-            }
-        }
-    )
-}
-
-@Composable
-fun LanguageDialog(
-    currentLanguage: String,
-    onDismiss: () -> Unit,
-    onLanguageChange: (String) -> Unit
-) {
-    var selectedLanguage by remember { mutableStateOf(currentLanguage) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Default.Info, null) },
-        title = { Text("Dil Seçimi") },
-        text = {
-            Column {
-                LanguageOption(
-                    title = "🇹🇷 Türkçe",
-                    selected = selectedLanguage == "tr",
-                    onClick = { selectedLanguage = "tr" }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                LanguageOption(
-                    title = "🇺🇸 English",
-                    selected = selectedLanguage == "en",
-                    onClick = { selectedLanguage = "en" }
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onLanguageChange(selectedLanguage) }
-            ) {
-                Text("Uygula")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.dialog_cancel))
-            }
-        }
-    )
-}
-
-@Composable
-fun ThemeOption(title: String, selected: Boolean, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = title,
-                fontSize = 16.sp,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-            )
-            if (selected) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun LanguageOption(title: String, selected: Boolean, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = title,
-                fontSize = 16.sp,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-            )
-            if (selected) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
     }
 }
 

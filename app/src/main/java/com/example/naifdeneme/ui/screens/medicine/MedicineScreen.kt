@@ -1,6 +1,7 @@
 package com.example.naifdeneme.ui.screens.medicine
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,13 +33,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -50,6 +50,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import androidx.compose.foundation.isSystemInDarkTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,7 +116,6 @@ fun MedicineScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f)
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -236,7 +236,7 @@ private fun MedicineCard(
 
             // Medicine Info
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth(0.8f) // WEIGHT YERİNE FILLMAXWIDTH
             ) {
                 Text(
                     text = medicine.name,
@@ -264,7 +264,6 @@ private fun EmptyStateSection() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .weight(1f)
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -293,7 +292,8 @@ private fun EmptyStateSection() {
 }
 
 // Helper functions
-private fun getSideBarColor(index: Int) = when (index % 4) {
+@Composable
+private fun getSideBarColor(index: Int): Color = when (index % 4) {
     0 -> if (isSystemInDarkTheme()) MaterialTheme.colorScheme.primary else Color(0xFFA2E4B8)
     1 -> if (isSystemInDarkTheme()) MaterialTheme.colorScheme.primary else Color(0xFFA7D7F9)
     2 -> if (isSystemInDarkTheme()) Color(0xFFF906F9) else Color(0xFFF5B8B8)

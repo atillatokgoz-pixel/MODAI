@@ -104,4 +104,32 @@
     <string name="pomodoro_stop">Durdur</string>
     <string name="pomodoro_reset">Sıfırla</string>
     <string name="finance_back">Geri</string>
+
+    <!-- Medicine Screen Strings -->
+    <string name="medicine_add">İlaç Ekle</string>
+    <string name="cancel">İptal</string>
+    <string name="save">Kaydet</string>
+    <string name="medicine_name_hint">İlaç adı</string>
+    <string name="medicine_dosage">Dozaj</string>
+    <string name="medicine_frequency">Sıklık</string>
+    <string name="medicine_time">Zaman</string>
+    <string name="add_time">Zaman Ekle</string>
+    <string name="medicine_start_date">Başlangıç</string>
+    <string name="medicine_end_date">Bitiş</string>
+    <string name="back">Geri</string>
+    <string name="medicine_title">İlaçlarım</string>
+    <string name="analytics">İstatistikler</string>
+    <string name="add">Ekle</string>
+    <string name="medicine_view_all">Tümünü Gör</string>
+    <string name="medicine_empty_state">İlaç bulunamadı</string>
+    <string name="medicine_empty_hint">İlaç eklemek için + butonuna tıklayın</string>
+
+    <!-- Yeni Settings String'leri -->
+    <string name="settings_appearance">Görünüm</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_language">Dil</string>
+    <string name="settings_light_theme">Açık</string>
+    <string name="settings_dark_theme">Koyu</string>
+    <string name="settings_turkish">Türkçe</string>
+    <string name="settings_english">İngilizce</string>
 </resources>

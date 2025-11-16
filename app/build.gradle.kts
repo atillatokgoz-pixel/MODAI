@@ -37,9 +37,9 @@ android {
     kotlinOptions {
         jvmTarget = "17"
         freeCompilerArgs = freeCompilerArgs + listOf(
-            "-Xopt-in=kotlin.RequiresOptIn",
-            "-Xopt-in=androidx.compose.material3.ExperimentalMaterial3Api",
-            "-Xopt-in=kotlin.time.ExperimentalTime"
+            "-opt-in=kotlin.RequiresOptIn",
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=kotlin.time.ExperimentalTime"
         )
     }
     buildFeatures {
@@ -60,14 +60,15 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
 
-    // COMPOSE BOM
+    // COMPOSE BOM - GÜNCELLENDİ
     implementation(platform("androidx.compose:compose-bom:2023.10.01"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
 
-    // MATERIAL 3
-    implementation("androidx.compose.material3:material3")
+    // MATERIAL 3 - VERSİYON MANUEL EKLENDİ (SegmentedButton için)
+    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.compose.material3:material3-window-size-class:1.2.0")
     implementation("androidx.compose.material:material-icons-extended")
 
     // WorkManager

@@ -2,7 +2,6 @@
 
 package com.example.naifdeneme.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -20,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.naifdeneme.SettingsScreen
 import java.util.*
+
 
 @Composable
 fun MainScreen(
@@ -87,10 +88,7 @@ fun MainScreen(
                 onNavigateToPomodoro = onNavigateToPomodoro
             )
             2 -> StatisticsContent(paddingValues)
-            3 -> SettingsContent(
-                paddingValues = paddingValues,
-                onNavigateToSettings = onNavigateToSettings
-            )
+            3 -> SettingsContent(paddingValues)
         }
     }
 }
@@ -185,42 +183,9 @@ fun StatisticsContent(paddingValues: PaddingValues) {
 }
 
 @Composable
-fun SettingsContent(
-    paddingValues: PaddingValues,
-    onNavigateToSettings: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onNavigateToSettings() },
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                Text(
-                    text = "⚙️ Uygulama Ayarları",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "Bildirimler, tema ve diğer ayarları yönetin",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        // Diğer ayar seçenekleri buraya eklenebilir
+fun SettingsContent(paddingValues: PaddingValues) {
+    Box(modifier = Modifier.padding(paddingValues)) {
+        SettingsScreen(onBack = { })
     }
 }
 
