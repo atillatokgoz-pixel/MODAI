@@ -50,8 +50,19 @@
     <string name="settings_name_dialog_label">Adınız</string>
     <string name="settings_clear_data_confirm">Sil</string>
     <string name="settings_notifications">Bildirimler</string>
-    <string name="clear_data_title">Tüm Verileri Sil?</string>
-    <string name="clear_data_message">Bu işlem geri alınamaz!</string>
+    <string name="settings_appearance">Görünüm</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_language">Dil</string>
+    <string name="settings_light_theme">Açık</string>
+    <string name="settings_dark_theme">Koyu</string>
+    <string name="settings_turkish">Türkçe</string>
+    <string name="settings_english">İngilizce</string>
+    <string name="settings_notification_info">Her alışkanlık için bildirim ayarlarını alışkanlık detay ekranından yapabilirsiniz.</string>
+    <string name="settings_test_mode">🧪 Test Modu</string>
+    <string name="settings_test_mode_desc">1 dakika sonra test bildirimi</string>
+    <string name="settings_test_button">Test</string>
+    <string name="settings_test_notification_scheduled">Test bildirimi planlandı ⏰</string>
+    <string name="settings_notification_permission_required">Bildirim izni gerekli!</string>
 
     <!-- Store -->
     <string name="store_title">Mağaza</string>
@@ -63,18 +74,25 @@
     <string name="modules_go_to_notes">Notlara Git</string>
     <string name="modules_back">Geri</string>
 
-    <!-- Water Module -->
-    <string name="water_tracker_title">Su İçimi</string>
+    <!-- Water Tracker -->
+    <string name="water_tracker_title">Su Takibi</string>
+    <string name="water_history">Geçmiş</string>
+    <string name="water_goal_reached">Günlük hedef tamamlandı!</string>
+    <string name="water_daily_target">Günlük Hedef</string>
     <string name="water_target">Hedef %dml</string>
-    <string name="add_water">Su Ekle</string>
-    <string name="daily_stats">Günlük İstatistik</string>
-    <string name="recent_activities">Son Kayıtlar</string>
+    <string name="set_daily_target_desc">Günlük su içme hedefinizi belirleyin</string>
+    <string name="add_water">%d ml Ekle</string>
+    <string name="no_water_entries_today">Bugün henüz su içmediniz</string>
+    <string name="daily_stats">Günlük İstatistikler</string>
+    <string name="recent_activities">Son Aktiviteler</string>
     <string name="reminders">Hatırlatıcılar</string>
     <string name="reminder_on">Açık</string>
     <string name="reminder_off">Kapalı</string>
-    <string name="cd_statistics">İstatistikler</string>
-    <string name="cd_settings">Ayarlar</string>
+
+    <!-- Content Descriptions -->
     <string name="cd_back">Geri</string>
+    <string name="cd_settings">Ayarlar</string>
+    <string name="cd_statistics">İstatistikler</string>
     <string name="cd_water_drop">Su damlası</string>
 
     <!-- Widget Labels and Descriptions -->
@@ -85,7 +103,7 @@
     <string name="notes_widget_label">Notlar</string>
     <string name="notes_widget_description">Hızlı notlar widget\'ı</string>
 
-    <!-- Notes Screen Strings -->
+    <!-- Notes Screen -->
     <string name="notes_title">Notlar</string>
     <string name="notes_add_new">Yeni Not Ekle</string>
     <string name="notes_empty_state">Henüz not yok</string>
@@ -96,40 +114,52 @@
     <string name="notes_save">Kaydet</string>
     <string name="notes_cancel">İptal</string>
 
-    <!-- Pomodoro Screen Strings -->
+    <!-- Pomodoro Screen -->
     <string name="pomodoro_title">Pomodoro Zamanlayıcı</string>
     <string name="pomodoro_work_time">Çalışma Süresi</string>
     <string name="pomodoro_break_time">Mola Süresi</string>
     <string name="pomodoro_start">Başlat</string>
     <string name="pomodoro_stop">Durdur</string>
     <string name="pomodoro_reset">Sıfırla</string>
-    <string name="finance_back">Geri</string>
 
-    <!-- Medicine Screen Strings -->
+    <!-- Medicine Screen -->
     <string name="medicine_add">İlaç Ekle</string>
-    <string name="cancel">İptal</string>
-    <string name="save">Kaydet</string>
+    <string name="medicine_title">İlaçlarım</string>
     <string name="medicine_name_hint">İlaç adı</string>
     <string name="medicine_dosage">Dozaj</string>
     <string name="medicine_frequency">Sıklık</string>
     <string name="medicine_time">Zaman</string>
-    <string name="add_time">Zaman Ekle</string>
     <string name="medicine_start_date">Başlangıç</string>
     <string name="medicine_end_date">Bitiş</string>
-    <string name="back">Geri</string>
-    <string name="medicine_title">İlaçlarım</string>
-    <string name="analytics">İstatistikler</string>
-    <string name="add">Ekle</string>
     <string name="medicine_view_all">Tümünü Gör</string>
     <string name="medicine_empty_state">İlaç bulunamadı</string>
     <string name="medicine_empty_hint">İlaç eklemek için + butonuna tıklayın</string>
 
-    <!-- Yeni Settings String'leri -->
-    <string name="settings_appearance">Görünüm</string>
-    <string name="settings_theme">Tema</string>
-    <string name="settings_language">Dil</string>
-    <string name="settings_light_theme">Açık</string>
-    <string name="settings_dark_theme">Koyu</string>
-    <string name="settings_turkish">Türkçe</string>
-    <string name="settings_english">İngilizce</string>
+    <!-- Common Actions -->
+    <string name="cancel">İptal</string>
+    <string name="save">Kaydet</string>
+    <string name="back">Geri</string>
+    <string name="add">Ekle</string>
+    <string name="add_time">Zaman Ekle</string>
+    <string name="analytics">İstatistikler</string>
+    <string name="finance_back">Geri</string>
+
+    <!-- Data Management -->
+    <string name="clear_data_title">Tüm Verileri Sil?</string>
+    <string name="clear_data_message">Bu işlem geri alınamaz!</string>
+
+    <!-- History Screen -->
+    <string name="history_daily">Günlük</string>
+    <string name="history_weekly">Haftalık</string>
+    <string name="history_monthly">Aylık</string>
+
+    <!-- Hatırlatıcı Ayarları -->
+    <string name="reminder_settings_title">Hatırlatıcı Ayarları</string>
+    <string name="reminder_save">Kaydet</string>
+    <string name="reminder_enable_reminders">Hatırlatıcıları Etkinleştir</string>
+    <string name="reminder_timing_section">ZAMANLAMA</string>
+    <string name="reminder_frequency">Sıklık</string>
+    <string name="reminder_start_time">Başlangıç Saati</string>
+    <string name="reminder_end_time">Bitiş Saati</string>
+    <string name="reminder_info">Hatırlatıcılar bu saat aralığında çalışır</string>
 </resources>

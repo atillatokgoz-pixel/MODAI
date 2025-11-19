@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App Genel -->
+    <!-- App General -->
     <string name="app_name">MODAI</string>
     <string name="app_tagline">AI-Powered Life Management</string>
 
@@ -50,8 +50,19 @@
     <string name="settings_name_dialog_label">Your Name</string>
     <string name="settings_clear_data_confirm">Delete</string>
     <string name="settings_notifications">Notifications</string>
-    <string name="clear_data_title">Clear All Data?</string>
-    <string name="clear_data_message">This cannot be undone!</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_light_theme">Light</string>
+    <string name="settings_dark_theme">Dark</string>
+    <string name="settings_turkish">Turkish</string>
+    <string name="settings_english">English</string>
+    <string name="settings_notification_info">You can configure notification settings for each habit from the habit detail screen.</string>
+    <string name="settings_test_mode">🧪 Test Mode</string>
+    <string name="settings_test_mode_desc">Test notification in 1 minute</string>
+    <string name="settings_test_button">Test</string>
+    <string name="settings_test_notification_scheduled">Test notification scheduled ⏰</string>
+    <string name="settings_notification_permission_required">Notification permission required!</string>
 
     <!-- Store -->
     <string name="store_title">Store</string>
@@ -63,18 +74,25 @@
     <string name="modules_go_to_notes">Go to Notes</string>
     <string name="modules_back">Back</string>
 
-    <!-- Water Module -->
+    <!-- Water Tracker -->
     <string name="water_tracker_title">Water Tracker</string>
+    <string name="water_history">History</string>
+    <string name="water_goal_reached">Daily goal completed!</string>
+    <string name="water_daily_target">Daily Target</string>
     <string name="water_target">Target %dml</string>
-    <string name="add_water">Add Water</string>
-    <string name="daily_stats">Daily Stats</string>
+    <string name="set_daily_target_desc">Set your daily water intake goal</string>
+    <string name="add_water">Add %d ml</string>
+    <string name="no_water_entries_today">No water intake today</string>
+    <string name="daily_stats">Daily Statistics</string>
     <string name="recent_activities">Recent Activities</string>
     <string name="reminders">Reminders</string>
     <string name="reminder_on">On</string>
     <string name="reminder_off">Off</string>
-    <string name="cd_statistics">Statistics</string>
-    <string name="cd_settings">Settings</string>
+
+    <!-- Content Descriptions -->
     <string name="cd_back">Back</string>
+    <string name="cd_settings">Settings</string>
+    <string name="cd_statistics">Statistics</string>
     <string name="cd_water_drop">Water drop</string>
 
     <!-- Widget Labels and Descriptions -->
@@ -85,7 +103,7 @@
     <string name="notes_widget_label">Notes</string>
     <string name="notes_widget_description">Quick notes widget</string>
 
-    <!-- Notes Screen Strings -->
+    <!-- Notes Screen -->
     <string name="notes_title">Notes</string>
     <string name="notes_add_new">Add New Note</string>
     <string name="notes_empty_state">No notes yet</string>
@@ -96,40 +114,52 @@
     <string name="notes_save">Save</string>
     <string name="notes_cancel">Cancel</string>
 
-    <!-- Pomodoro Screen Strings -->
+    <!-- Pomodoro Screen -->
     <string name="pomodoro_title">Pomodoro Timer</string>
     <string name="pomodoro_work_time">Work Time</string>
     <string name="pomodoro_break_time">Break Time</string>
     <string name="pomodoro_start">Start</string>
     <string name="pomodoro_stop">Stop</string>
     <string name="pomodoro_reset">Reset</string>
-    <string name="finance_back">Back</string>
 
-    <!-- Medicine Screen Strings -->
+    <!-- Medicine Screen -->
     <string name="medicine_add">Add Medicine</string>
-    <string name="cancel">Cancel</string>
-    <string name="save">Save</string>
+    <string name="medicine_title">My Medicines</string>
     <string name="medicine_name_hint">Medicine name</string>
     <string name="medicine_dosage">Dosage</string>
     <string name="medicine_frequency">Frequency</string>
     <string name="medicine_time">Time</string>
-    <string name="add_time">Add Time</string>
     <string name="medicine_start_date">Start Date</string>
     <string name="medicine_end_date">End Date</string>
-    <string name="back">Back</string>
-    <string name="medicine_title">My Medicines</string>
-    <string name="analytics">Analytics</string>
-    <string name="add">Add</string>
     <string name="medicine_view_all">View All</string>
     <string name="medicine_empty_state">No medicines found</string>
     <string name="medicine_empty_hint">Tap + button to add medicine</string>
 
-    <!-- English versions -->
-    <string name="settings_appearance">Appearance</string>
-    <string name="settings_theme">Theme</string>
-    <string name="settings_language">Language</string>
-    <string name="settings_light_theme">Light</string>
-    <string name="settings_dark_theme">Dark</string>
-    <string name="settings_turkish">Turkish</string>
-    <string name="settings_english">English</string>
+    <!-- Common Actions -->
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="back">Back</string>
+    <string name="add">Add</string>
+    <string name="add_time">Add Time</string>
+    <string name="analytics">Analytics</string>
+    <string name="finance_back">Back</string>
+
+    <!-- Data Management -->
+    <string name="clear_data_title">Clear All Data?</string>
+    <string name="clear_data_message">This cannot be undone!</string>
+
+    <!-- History Screen -->
+    <string name="history_daily">Daily</string>
+    <string name="history_weekly">Weekly</string>
+    <string name="history_monthly">Monthly</string>
+
+    <!-- Reminder Settings -->
+    <string name="reminder_settings_title">Reminder Settings</string>
+    <string name="reminder_save">Save</string>
+    <string name="reminder_enable_reminders">Enable Reminders</string>
+    <string name="reminder_timing_section">TIMING</string>
+    <string name="reminder_frequency">Frequency</string>
+    <string name="reminder_start_time">Start Time</string>
+    <string name="reminder_end_time">End Time</string>
+    <string name="reminder_info">Reminders will work during this time range</string>
 </resources>

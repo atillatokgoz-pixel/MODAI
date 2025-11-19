@@ -10,20 +10,13 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import com.example.naifdeneme.PreferencesManager
-import kotlinx.coroutines.flow.first
 
 /**
  * MODAI Theme System
@@ -98,32 +91,15 @@ private val DarkColorScheme = darkColorScheme(
 // ============================================
 @Composable
 fun ModaiTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = isSystemInDarkTheme(), // 🔥 BU PARAMETRE ARTIK KULLANILIYOR
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
-    val preferencesManager = remember { PreferencesManager.getInstance(context) }
 
-    // App settings state
-    var appSettings by remember { mutableStateOf(AppSettings()) }
-
-    // Load settings from DataStore
-    LaunchedEffect(Unit) {
-        val darkMode = preferencesManager.isDarkMode.first()
-        val language = preferencesManager.language.first()
-        val dynamicColorSetting = preferencesManager.dynamicColor.first()
-
-        appSettings = AppSettings(
-            isDarkMode = darkMode,
-            language = language,
-            dynamicColor = dynamicColorSetting
-        )
-    }
-
-    // Determine actual theme to use
-    val useDarkTheme = appSettings.isDarkMode
-    val useDynamicColor = dynamicColor && appSettings.dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    // 🔥 darkTheme parametresini kullan (MainActivity'den gelen Flow değeri)
+    val useDarkTheme = darkTheme
+    val useDynamicColor = dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
     val colorScheme = when {
         useDynamicColor && useDarkTheme -> {
@@ -144,6 +120,13 @@ fun ModaiTheme(
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !useDarkTheme
         }
     }
+
+    // AppSettings'i darkTheme parametresine göre güncelle
+    val appSettings = AppSettings(
+        isDarkMode = useDarkTheme,
+        language = "tr", // Bu MainActivity'den alınabilir isterseniz
+        dynamicColor = dynamicColor
+    )
 
     CompositionLocalProvider(
         LocalAppSettings provides appSettings

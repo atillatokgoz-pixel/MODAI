@@ -30,39 +30,26 @@ import kotlinx.coroutines.flow.first
 fun SettingsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val prefsManager = remember { PreferencesManager.getInstance(context) }
-
     val scope = rememberCoroutineScope()
     val database = remember { AppDatabase.getDatabase(context) }
 
-    // Tema ve dil state'lerini burada yönetiyoruz
     var userName by remember { mutableStateOf("") }
     var isDarkMode by remember { mutableStateOf(false) }
     var language by remember { mutableStateOf("tr") }
-
     var showNameDialog by remember { mutableStateOf(false) }
     var showClearDataDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
-
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // DataStore'dan ayarları yükle ve dinle
     LaunchedEffect(Unit) {
-        // İlk yükleme
         userName = prefsManager.getUserNameImmediate()
         isDarkMode = prefsManager.isDarkMode.first()
         language = prefsManager.language.first()
 
-        // Real-time updates
-        prefsManager.userName.collectLatest { name ->
-            userName = name
-        }
-        prefsManager.isDarkMode.collectLatest { darkMode ->
-            isDarkMode = darkMode
-        }
-        prefsManager.language.collectLatest { lang ->
-            language = lang
-        }
+        prefsManager.userName.collectLatest { name -> userName = name }
+        prefsManager.isDarkMode.collectLatest { darkMode -> isDarkMode = darkMode }
+        prefsManager.language.collectLatest { lang -> language = lang }
     }
 
     val testPermissionLauncher = rememberLauncherForActivityResult(
@@ -112,24 +99,21 @@ fun SettingsScreen(onBack: () -> Unit) {
                 )
             }
 
-            Section(title = stringResource(R.string.settings_appearance)) {
+            Section(title = "Görünüm") {
                 SettingsItem(
                     icon = Icons.Default.Settings,
-                    title = stringResource(R.string.settings_theme),
-                    subtitle = if (isDarkMode)
-                        stringResource(R.string.settings_dark_theme)
-                    else
-                        stringResource(R.string.settings_light_theme),
+                    title = "Tema",
+                    subtitle = if (isDarkMode) "Koyu" else "Açık",
                     onClick = { showThemeDialog = true }
                 )
 
                 SettingsItem(
                     icon = Icons.Default.Info,
-                    title = stringResource(R.string.settings_language),
+                    title = "Dil",
                     subtitle = when (language) {
-                        "tr" -> stringResource(R.string.settings_turkish)
-                        "en" -> stringResource(R.string.settings_english)
-                        else -> stringResource(R.string.settings_turkish)
+                        "tr" -> "Türkçe"
+                        "en" -> "English"
+                        else -> "Türkçe"
                     },
                     onClick = { showLanguageDialog = true }
                 )
@@ -230,11 +214,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                                 containerColor = MaterialTheme.colorScheme.secondary
                             )
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Send,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
+                            Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(4.dp))
                             Text("Test", fontSize = 12.sp)
                         }
@@ -259,22 +239,10 @@ fun SettingsScreen(onBack: () -> Unit) {
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        stringResource(R.string.app_name),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        stringResource(R.string.app_tagline),
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(stringResource(R.string.app_name), fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.app_tagline), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(8.dp))
-                    Text(
-                        stringResource(R.string.settings_made_with_love),
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(stringResource(R.string.settings_made_with_love), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -285,182 +253,30 @@ fun SettingsScreen(onBack: () -> Unit) {
             currentName = userName,
             onDismiss = { showNameDialog = false },
             onSave = { newName ->
-                scope.launch {
-                    prefsManager.setUserName(newName)
-                }
+                scope.launch { prefsManager.setUserName(newName) }
                 showNameDialog = false
             }
         )
     }
 
     if (showThemeDialog) {
-        AlertDialog(
-            onDismissRequest = { showThemeDialog = false },
-            icon = { Icon(Icons.Default.Settings, null) },
-            title = { Text(stringResource(R.string.settings_theme)) },
-            text = {
-                Column {
-                    Surface(
-                        onClick = {
-                            scope.launch {
-                                prefsManager.setDarkMode(false)
-                            }
-                            showThemeDialog = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        color = if (!isDarkMode) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "🌞 ${stringResource(R.string.settings_light_theme)}",
-                                fontSize = 16.sp,
-                                fontWeight = if (!isDarkMode) FontWeight.Bold else FontWeight.Normal,
-                                color = if (!isDarkMode) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                            )
-                            if (!isDarkMode) {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Surface(
-                        onClick = {
-                            scope.launch {
-                                prefsManager.setDarkMode(true)
-                            }
-                            showThemeDialog = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        color = if (isDarkMode) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "🌙 ${stringResource(R.string.settings_dark_theme)}",
-                                fontSize = 16.sp,
-                                fontWeight = if (isDarkMode) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isDarkMode) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                            )
-                            if (isDarkMode) {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showThemeDialog = false }) {
-                    Text(stringResource(R.string.dialog_cancel))
-                }
+        ThemeDialog(
+            currentTheme = isDarkMode,
+            onDismiss = { showThemeDialog = false },
+            onThemeChange = { isDarkMode ->
+                scope.launch { prefsManager.setDarkMode(isDarkMode) }
+                showThemeDialog = false
             }
         )
     }
 
     if (showLanguageDialog) {
-        AlertDialog(
-            onDismissRequest = { showLanguageDialog = false },
-            icon = { Icon(Icons.Default.Info, null) },
-            title = { Text(stringResource(R.string.settings_language)) },
-            text = {
-                Column {
-                    Surface(
-                        onClick = {
-                            scope.launch {
-                                prefsManager.setLanguage("tr")
-                            }
-                            // Activity'yi yeniden başlat
-                            (context as? ComponentActivity)?.recreate()
-                            showLanguageDialog = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        color = if (language == "tr") MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "🇹🇷 ${stringResource(R.string.settings_turkish)}",
-                                fontSize = 16.sp,
-                                fontWeight = if (language == "tr") FontWeight.Bold else FontWeight.Normal,
-                                color = if (language == "tr") MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                            )
-                            if (language == "tr") {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Surface(
-                        onClick = {
-                            scope.launch {
-                                prefsManager.setLanguage("en")
-                            }
-                            // Activity'yi yeniden başlat
-                            (context as? ComponentActivity)?.recreate()
-                            showLanguageDialog = false
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        color = if (language == "en") MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "🇺🇸 ${stringResource(R.string.settings_english)}",
-                                fontSize = 16.sp,
-                                fontWeight = if (language == "en") FontWeight.Bold else FontWeight.Normal,
-                                color = if (language == "en") MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                            )
-                            if (language == "en") {
-                                Icon(
-                                    Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showLanguageDialog = false }) {
-                    Text(stringResource(R.string.dialog_cancel))
-                }
+        LanguageDialog(
+            currentLanguage = language,
+            onDismiss = { showLanguageDialog = false },
+            onLanguageChange = { newLanguage ->
+                scope.launch { prefsManager.setLanguage(newLanguage) }
+                showLanguageDialog = false
             }
         )
     }
@@ -472,19 +288,16 @@ fun SettingsScreen(onBack: () -> Unit) {
             title = { Text(stringResource(R.string.clear_data_title)) },
             text = { Text(stringResource(R.string.clear_data_message)) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        scope.launch {
-                            database.clearAllTables()
-                            prefsManager.clearAll()
-                            // State'leri sıfırla
-                            userName = prefsManager.getUserNameImmediate()
-                            isDarkMode = prefsManager.isDarkMode.first()
-                            language = prefsManager.language.first()
-                        }
-                        showClearDataDialog = false
+                TextButton(onClick = {
+                    scope.launch {
+                        database.clearAllTables()
+                        prefsManager.clearAll()
+                        userName = prefsManager.getUserNameImmediate()
+                        isDarkMode = prefsManager.isDarkMode.first()
+                        language = prefsManager.language.first()
                     }
-                ) {
+                    showClearDataDialog = false
+                }) {
                     Text(stringResource(R.string.settings_clear_data_confirm), color = MaterialTheme.colorScheme.error)
                 }
             },
@@ -494,6 +307,92 @@ fun SettingsScreen(onBack: () -> Unit) {
                 }
             }
         )
+    }
+}
+
+@Composable
+fun ThemeDialog(currentTheme: Boolean, onDismiss: () -> Unit, onThemeChange: (Boolean) -> Unit) {
+    var selectedTheme by remember { mutableStateOf(currentTheme) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.Settings, null) },
+        title = { Text("Tema Seçimi") },
+        text = {
+            Column {
+                ThemeOption(title = "🌞 Açık Tema", selected = !selectedTheme, onClick = { selectedTheme = false })
+                Spacer(modifier = Modifier.height(8.dp))
+                ThemeOption(title = "🌙 Koyu Tema", selected = selectedTheme, onClick = { selectedTheme = true })
+            }
+        },
+        confirmButton = { TextButton(onClick = { onThemeChange(selectedTheme) }) { Text("Uygula") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) } }
+    )
+}
+
+@Composable
+fun LanguageDialog(currentLanguage: String, onDismiss: () -> Unit, onLanguageChange: (String) -> Unit) {
+    var selectedLanguage by remember { mutableStateOf(currentLanguage) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.Info, null) },
+        title = { Text("Dil Seçimi") },
+        text = {
+            Column {
+                LanguageOption(title = "🇹🇷 Türkçe", selected = selectedLanguage == "tr", onClick = { selectedLanguage = "tr" })
+                Spacer(modifier = Modifier.height(8.dp))
+                LanguageOption(title = "🇺🇸 English", selected = selectedLanguage == "en", onClick = { selectedLanguage = "en" })
+            }
+        },
+        confirmButton = { TextButton(onClick = { onLanguageChange(selectedLanguage) }) { Text("Uygula") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) } }
+    )
+}
+
+@Composable
+fun ThemeOption(title: String, selected: Boolean, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+            )
+            if (selected) { Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+        }
+    }
+}
+
+@Composable
+fun LanguageOption(title: String, selected: Boolean, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = title,
+                fontSize = 16.sp,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+            )
+            if (selected) { Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+        }
     }
 }
 
@@ -513,33 +412,16 @@ fun Section(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-fun SettingsItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    subtitle: String,
-    onClick: (() -> Unit)?,
-    textColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface
-) {
-    Surface(
-        onClick = onClick ?: {},
-        enabled = onClick != null,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+fun SettingsItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: (() -> Unit)?, textColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface) {
+    Surface(onClick = onClick ?: {}, enabled = onClick != null, modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = null, tint = textColor, modifier = Modifier.size(24.dp))
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = textColor)
                 Text(subtitle, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (onClick != null) {
-                Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            if (onClick != null) { Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
     }
 }
@@ -547,30 +429,18 @@ fun SettingsItem(
 @Composable
 fun NameDialog(currentName: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     var name by remember { mutableStateOf(currentName) }
-
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Person, null) },
         title = { Text(stringResource(R.string.settings_name_dialog_title)) },
         text = {
             OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
+                value = name, onValueChange = { name = it },
                 label = { Text(stringResource(R.string.settings_name_dialog_label)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                singleLine = true, modifier = Modifier.fillMaxWidth()
             )
         },
-        confirmButton = {
-            TextButton(
-                onClick = { if (name.isNotBlank()) onSave(name.trim()) },
-                enabled = name.isNotBlank()
-            ) {
-                Text(stringResource(R.string.dialog_save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) }
-        }
+        confirmButton = { TextButton(onClick = { if (name.isNotBlank()) onSave(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.dialog_save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) } }
     )
 }
