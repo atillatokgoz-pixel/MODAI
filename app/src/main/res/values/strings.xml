@@ -10,8 +10,8 @@
     <string name="nav_store">Mağaza</string>
     <string name="nav_settings">Ayarlar</string>
 
-    <!-- Dashboard -->
-    <string name="dashboard_greeting">Merhaba, %s</string>
+    <!-- Dashboard (GÜNCELLENDİ) -->
+    <string name="dashboard_greeting">Merhaba, %s 👋</string>
     <string name="dashboard_today">Bugün, %s</string>
     <string name="dashboard_current_status">Güncel Durum</string>
     <string name="dashboard_my_modules">Modlarım</string>
@@ -19,6 +19,15 @@
     <string name="dashboard_premium_teaser_title">🤖 AI Coach\'u Dene</string>
     <string name="dashboard_premium_teaser_desc">Kişiselleştirilmiş öneriler ve detaylı analiz için premium\'a geç!</string>
     <string name="dashboard_premium_explore">Premium\'u Keşfet</string>
+    <string name="dashboard_daily_quote">Bugün hedeflerine ulaşman için harika bir gün!</string>
+    <string name="dashboard_tasks_title">Bugün Yapılacaklar</string>
+
+    <!-- Dashboard Status (YENİ EKLENDİ) -->
+    <string name="status_completed">Tamamlandı 🎉</string>
+    <string name="status_waiting">Bekliyor</string>
+    <string name="status_focus_time">Odaklanma zamanı</string>
+    <string name="unit_dose">doz</string>
+    <string name="btn_quick_add_water">+200ml</string>
 
     <!-- Common -->
     <string name="habits_dashboard">Alışkanlıklar</string>
@@ -89,6 +98,89 @@
     <string name="reminder_on">Açık</string>
     <string name="reminder_off">Kapalı</string>
 
+    <!-- Water Tracker - Drink Types -->
+    <string name="drink_type_water">Su</string>
+    <string name="drink_type_tea">Çay</string>
+    <string name="drink_type_coffee">Kahve</string>
+    <string name="drink_type_juice">Meyve Suyu</string>
+    <string name="drink_type_milk">Süt</string>
+    <string name="drink_type_other">Diğer</string>
+    <string name="select_drink_type">İçecek Tipi</string>
+
+    <!-- Water Tracker - Custom Amount -->
+    <string name="custom_amount">Özel Miktar</string>
+    <string name="custom_amount_hint">Miktar (ml)</string>
+    <string name="custom_amount_title">Özel Miktar Gir</string>
+    <string name="custom_amount_error">Geçerli bir miktar girin (100-2000 ml)</string>
+
+    <!-- Water Tracker - Note -->
+    <string name="add_note">Not Ekle</string>
+    <string name="note_hint">Not (opsiyonel)</string>
+    <string name="note_dialog_title">Not Ekle</string>
+
+    <!-- Water Tracker - Delete -->
+    <string name="delete_entry">Kaydı Sil</string>
+    <string name="delete_entry_confirm">Bu kaydı silmek istediğinizden emin misiniz?</string>
+    <string name="delete_all_entries">Tümünü Sil</string>
+    <string name="delete_all_entries_confirm">Tüm su kayıtlarını silmek istediğinizden emin misiniz?</string>
+
+    <!-- Water History Screen -->
+    <string name="weekly_average">Bu Hafta Ortalaması</string>
+    <string name="statistics">İstatistikler</string>
+    <string name="weekly_average_label">Haftalık Ortalama</string>
+    <string name="goal_reached_days">Hedefe Ulaşma</string>
+    <string name="total_consumption">Toplam Tüketim</string>
+    <string name="best_day">En İyi Gün</string>
+    <string name="worst_day">En Az İçilen</string>
+    <string name="trend">Trend</string>
+    <string name="trend_up">Artış</string>
+    <string name="trend_down">Azalış</string>
+    <string name="no_data_available">Veri yok</string>
+    <string name="ml_per_day">%d ml / gün</string>
+
+    <!-- Water Reminder Settings -->
+    <string name="water_reminder_settings">Su Hatırlatıcı Ayarları</string>
+    <string name="enable_reminders">Hatırlatıcıları Etkinleştir</string>
+    <string name="reminder_enable_desc">Düzenli aralıklarla su içme bildirimleri al</string>
+    <string name="reminders_enabled">Hatırlatıcılar etkinleştirildi</string>
+    <string name="reminders_disabled">Hatırlatıcılar devre dışı bırakıldı</string>
+    <string name="reminder_frequency">Hatırlatma Sıklığı</string>
+    <string name="every_x_minutes">Her %d dakikada</string>
+    <string name="frequency_desc">Bildirimler arası bekleme süresi</string>
+    <string name="active_hours">Aktif Saatler</string>
+    <string name="active_hours_desc">Hatırlatıcıların gönderileceği saat aralığı</string>
+    <string name="start_time">Başlangıç</string>
+    <string name="end_time">Bitiş</string>
+    <string name="notification_preferences">Bildirim Tercihleri</string>
+    <string name="notification_sound">Bildirim Sesi</string>
+    <string name="notification_sound_desc">Hatırlatıcılarda ses çal</string>
+    <string name="vibration">Titreşim</string>
+    <string name="vibration_desc">Bildirimde titret</string>
+    <string name="send_test_notification">Test Bildirimi Gönder</string>
+    <string name="test_notification_scheduled">Test bildirimi 5 saniye içinde gelecek</string>
+    <string name="reminder_info_text">💡 İpucu: Batarya optimizasyonunu kapatarak bildirimlerin düzenli gelmesini sağlayabilirsiniz.</string>
+    <string name="start_time_must_be_before_end">Başlangıç saati bitiş saatinden önce olmalı</string>
+    <string name="end_time_must_be_after_start">Bitiş saati başlangıç saatinden sonra olmalı</string>
+
+    <!-- Water Notification Messages -->
+    <string name="notification_channel_name">Su Hatırlatıcıları</string>
+    <string name="notification_channel_description">Düzenli su içme hatırlatmaları</string>
+    <string name="notification_test_title">🧪 Test Bildirimi</string>
+    <string name="notification_test_message">Bildirimler çalışıyor! ✅</string>
+    <string name="notification_goal_reached_title">🎉 Günlük Hedef Tamamlandı!</string>
+    <string name="notification_goal_reached_message">Harika! %d ml su içtiniz!</string>
+    <string name="notification_almost_there_title">💪 Az Kaldı!</string>
+    <string name="notification_almost_there_message">%d ml daha içerek hedefi tamamlayın!</string>
+    <string name="notification_halfway_title">💧 Su İçme Zamanı!</string>
+    <string name="notification_halfway_message">Hedefin %%%d\'ine ulaştınız. Devam edin!</string>
+    <string name="notification_quarter_title">🚰 Su İçmeyi Unutmayın!</string>
+    <string name="notification_quarter_message">Bugün %1$d ml içtiniz. Hedefiniz: %2$d ml</string>
+    <string name="notification_start_title">💦 Hidrasyonunuzu İhmal Etmeyin!</string>
+    <string name="notification_start_message">Hemen bir bardak su için! 🥤</string>
+    <string name="notification_add_250ml">250ml</string>
+    <string name="notification_add_500ml">500ml</string>
+    <string name="water_added_success">%d ml su eklendi ✓</string>
+
     <!-- Content Descriptions -->
     <string name="cd_back">Geri</string>
     <string name="cd_settings">Ayarlar</string>
@@ -153,13 +245,31 @@
     <string name="history_weekly">Haftalık</string>
     <string name="history_monthly">Aylık</string>
 
-    <!-- Hatırlatıcı Ayarları -->
+    <!-- Hatırlatıcı Ayarları (Genel - Eski sistem için) -->
     <string name="reminder_settings_title">Hatırlatıcı Ayarları</string>
     <string name="reminder_save">Kaydet</string>
     <string name="reminder_enable_reminders">Hatırlatıcıları Etkinleştir</string>
     <string name="reminder_timing_section">ZAMANLAMA</string>
-    <string name="reminder_frequency">Sıklık</string>
     <string name="reminder_start_time">Başlangıç Saati</string>
     <string name="reminder_end_time">Bitiş Saati</string>
     <string name="reminder_info">Hatırlatıcılar bu saat aralığında çalışır</string>
+
+    <!-- Dashboard Grid (YENİ) -->
+    <string name="grid_title">Genel Durum</string>
+
+    <string name="grid_health">Sağlık</string>
+    <string name="grid_health_desc">Haftalık Hedef</string>
+
+    <string name="grid_education">Eğitim</string>
+    <string name="grid_education_desc">Aylık İlerleme</string>
+
+    <string name="grid_finance">Finans</string>
+    <string name="grid_finance_desc">Bütçe Kullanımı</string>
+
+    <string name="grid_work">İş</string>
+    <string name="grid_work_desc">Proje Tamamlanma</string>
+
+    <!-- Bottom Navigation Labels -->
+    <string name="nav_tasks">Görevler</string>
+    <string name="nav_analytics">Analiz</string>
 </resources>

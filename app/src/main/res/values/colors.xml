@@ -35,6 +35,7 @@
 
     <!-- Accent Colors (Neon - Dark Mode) -->
     <color name="neon_aqua">#06F9F9</color>
+    <color name="neon_cyan">#06F9F9</color> <!-- 🔥 YENİ: Water notification için -->
     <color name="neon_magenta">#F906F9</color>
     <color name="neon_lime">#06F906</color>
     <color name="neon_purple">#9D06F9</color>

@@ -9,13 +9,14 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 /**
  * PreferencesManager - DataStore kullanarak uygulama ayarlarını yönetir
  *
  * Tema, dil ve modül ayarları
+ * Version: Updated with sound/vibration/priority
  */
 class PreferencesManager(private val context: Context) {
 
@@ -42,6 +43,18 @@ class PreferencesManager(private val context: Context) {
         private val KEY_WATER_REMINDER_END_HOUR = intPreferencesKey("water_reminder_end_hour")
         private val KEY_WATER_REMINDER_FREQUENCY = intPreferencesKey("water_reminder_frequency")
 
+        // 🔥 YENİ EKLENEN KEYS (EKSİK OLANLAR BUNLARDI!)
+        private val KEY_WATER_NOTIFICATION_SOUND = booleanPreferencesKey("water_notification_sound")
+        private val KEY_WATER_NOTIFICATION_VIBRATION = booleanPreferencesKey("water_notification_vibration")
+        private val KEY_WATER_NOTIFICATION_PRIORITY = stringPreferencesKey("water_notification_priority")
+        private val KEY_WATER_SEND_IN_DND = booleanPreferencesKey("water_send_in_dnd")
+
+        // Validation Constants
+        const val MIN_FREQUENCY_MINUTES = 15
+        const val MAX_FREQUENCY_MINUTES = 180
+        const val MIN_DAILY_TARGET = 500
+        const val MAX_DAILY_TARGET = 10000
+
         // Singleton instance
         @Volatile
         private var INSTANCE: PreferencesManager? = null
@@ -57,124 +70,49 @@ class PreferencesManager(private val context: Context) {
 
     // === KULLANICI AYARLARI ===
 
-    /**
-     * Kullanıcı adını kaydet
-     */
     suspend fun setUserName(name: String) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_USER_NAME] = name
-        }
+        context.dataStore.edit { preferences -> preferences[KEY_USER_NAME] = name }
     }
-
-    /**
-     * Kullanıcı adını al - Flow
-     */
-    val userName: Flow<String> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_USER_NAME] ?: context.getString(R.string.default_user_name)
-        }
-
-    /**
-     * Kullanıcı adını hemen al - Blocking (eski kodlarla uyumluluk için)
-     */
-    suspend fun getUserNameImmediate(): String {
-        return userName.first()
-    }
+    val userName: Flow<String> = context.dataStore.data.map { it[KEY_USER_NAME] ?: context.getString(R.string.default_user_name) }
+    suspend fun getUserNameImmediate(): String = userName.first()
 
     // === TEMA AYARLARI ===
 
-    /**
-     * Koyu tema ayarını kaydet
-     */
     suspend fun setDarkMode(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_IS_DARK_MODE] = enabled
-        }
+        context.dataStore.edit { preferences -> preferences[KEY_IS_DARK_MODE] = enabled }
     }
-
-    /**
-     * Koyu tema durumu - Flow
-     */
-    val isDarkMode: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_IS_DARK_MODE] ?: false
-        }
+    val isDarkMode: Flow<Boolean> = context.dataStore.data.map { it[KEY_IS_DARK_MODE] ?: false }
 
     // === DİL AYARLARI ===
 
-    /**
-     * Dil ayarını kaydet ("tr", "en")
-     */
     suspend fun setLanguage(language: String) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_LANGUAGE] = language
-        }
+        context.dataStore.edit { preferences -> preferences[KEY_LANGUAGE] = language }
     }
+    val language: Flow<String> = context.dataStore.data.map { it[KEY_LANGUAGE] ?: "tr" }
 
-    /**
-     * Mevcut dil - Flow
-     */
-    val language: Flow<String> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_LANGUAGE] ?: "tr" // Varsayılan Türkçe
-        }
+    // === NAVİGASYON ===
 
-    // === NAVİGASYON (Son Ekran) ===
-
-    /**
-     * Son ziyaret edilen ekranı kaydet (recreate sonrası geri dönmek için)
-     */
     suspend fun setLastScreen(screen: String) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_LAST_SCREEN] = screen
-        }
+        context.dataStore.edit { preferences -> preferences[KEY_LAST_SCREEN] = screen }
     }
-
-    /**
-     * Son ekranı al - Flow
-     */
-    val lastScreen: Flow<String> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_LAST_SCREEN] ?: "main"
-        }
-
-    /**
-     * Son ekran kaydını temizle
-     */
+    val lastScreen: Flow<String> = context.dataStore.data.map { it[KEY_LAST_SCREEN] ?: "main" }
     suspend fun clearLastScreen() {
-        context.dataStore.edit { preferences ->
-            preferences.remove(KEY_LAST_SCREEN)
-        }
+        context.dataStore.edit { preferences -> preferences.remove(KEY_LAST_SCREEN) }
     }
 
     // === DİNAMİK RENK ===
 
-    /**
-     * Dynamic color (Material You) ayarı
-     */
     suspend fun setDynamicColor(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_DYNAMIC_COLOR] = enabled
-        }
+        context.dataStore.edit { preferences -> preferences[KEY_DYNAMIC_COLOR] = enabled }
     }
+    val dynamicColor: Flow<Boolean> = context.dataStore.data.map { it[KEY_DYNAMIC_COLOR] ?: true }
 
-    val dynamicColor: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_DYNAMIC_COLOR] ?: true // Varsayılan açık
-        }
-
-    // === BİLDİRİM AYARLARI ===
+    // === BİLDİRİM AYARLARI (GENEL) ===
 
     suspend fun setReminderEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_REMINDER_ENABLED] = enabled
-        }
+        context.dataStore.edit { preferences -> preferences[KEY_REMINDER_ENABLED] = enabled }
     }
-
-    val isReminderEnabled: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_REMINDER_ENABLED] ?: false
-        }
+    val isReminderEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_REMINDER_ENABLED] ?: false }
 
     suspend fun setReminderTime(hour: Int, minute: Int) {
         context.dataStore.edit { preferences ->
@@ -182,124 +120,101 @@ class PreferencesManager(private val context: Context) {
             preferences[KEY_REMINDER_MINUTE] = minute
         }
     }
+    val reminderHour: Flow<Int> = context.dataStore.data.map { it[KEY_REMINDER_HOUR] ?: 9 }
+    val reminderMinute: Flow<Int> = context.dataStore.data.map { it[KEY_REMINDER_MINUTE] ?: 0 }
 
-    val reminderHour: Flow<Int> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_REMINDER_HOUR] ?: 9 // Varsayılan 09:00
-        }
+    // === SU TAKİBİ AYARLARI (TAMAMI) ===
 
-    val reminderMinute: Flow<Int> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_REMINDER_MINUTE] ?: 0
-        }
-
-    // === SU TAKİBİ AYARLARI === 🔥 YENİ
-
-    /**
-     * Günlük su hedefi (ml)
-     */
     suspend fun setWaterDailyTarget(target: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_WATER_DAILY_TARGET] = target
-        }
+        val validTarget = target.coerceIn(MIN_DAILY_TARGET, MAX_DAILY_TARGET)
+        context.dataStore.edit { preferences -> preferences[KEY_WATER_DAILY_TARGET] = validTarget }
     }
+    val waterDailyTarget: Flow<Int> = context.dataStore.data.map { it[KEY_WATER_DAILY_TARGET] ?: 2500 }
 
-    val waterDailyTarget: Flow<Int> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_WATER_DAILY_TARGET] ?: 2500 // Varsayılan 2500ml
-        }
-
-    /**
-     * Su hatırlatıcısı aktif/pasif
-     */
     suspend fun setWaterReminderEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_WATER_REMINDER_ENABLED] = enabled
-        }
+        context.dataStore.edit { preferences -> preferences[KEY_WATER_REMINDER_ENABLED] = enabled }
     }
+    val waterReminderEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_WATER_REMINDER_ENABLED] ?: false }
 
-    val waterReminderEnabled: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_WATER_REMINDER_ENABLED] ?: false
-        }
-
-    /**
-     * Hatırlatıcı başlangıç saati (0-23)
-     */
     suspend fun setWaterReminderStartHour(hour: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_WATER_REMINDER_START_HOUR] = hour
-        }
+        context.dataStore.edit { preferences -> preferences[KEY_WATER_REMINDER_START_HOUR] = hour.coerceIn(0, 23) }
     }
+    val waterReminderStartHour: Flow<Int> = context.dataStore.data.map { it[KEY_WATER_REMINDER_START_HOUR] ?: 9 }
 
-    val waterReminderStartHour: Flow<Int> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_WATER_REMINDER_START_HOUR] ?: 9 // Varsayılan 09:00
-        }
-
-    /**
-     * Hatırlatıcı bitiş saati (0-23)
-     */
     suspend fun setWaterReminderEndHour(hour: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_WATER_REMINDER_END_HOUR] = hour
-        }
+        context.dataStore.edit { preferences -> preferences[KEY_WATER_REMINDER_END_HOUR] = hour.coerceIn(0, 23) }
     }
+    val waterReminderEndHour: Flow<Int> = context.dataStore.data.map { it[KEY_WATER_REMINDER_END_HOUR] ?: 22 }
 
-    val waterReminderEndHour: Flow<Int> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_WATER_REMINDER_END_HOUR] ?: 22 // Varsayılan 22:00
-        }
+    suspend fun setWaterReminderFrequency(minutes: Int) {
+        context.dataStore.edit { preferences -> preferences[KEY_WATER_REMINDER_FREQUENCY] = minutes.coerceIn(MIN_FREQUENCY_MINUTES, MAX_FREQUENCY_MINUTES) }
+    }
+    val waterReminderFrequency: Flow<Int> = context.dataStore.data.map { it[KEY_WATER_REMINDER_FREQUENCY] ?: 60 }
+
+    // 🔥 YENİ EKLENEN FONKSİYONLAR (KIRMIZI HATALARI ÇÖZECEK)
 
     /**
-     * Hatırlatıcı sıklığı (dakika cinsinden)
+     * Bildirim sesi aktif/pasif
      */
-    suspend fun setWaterReminderFrequency(minutes: Int) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_WATER_REMINDER_FREQUENCY] = minutes
-        }
+    suspend fun setWaterNotificationSound(enabled: Boolean) {
+        context.dataStore.edit { preferences -> preferences[KEY_WATER_NOTIFICATION_SOUND] = enabled }
     }
+    val waterNotificationSound: Flow<Boolean> = context.dataStore.data.map { it[KEY_WATER_NOTIFICATION_SOUND] ?: true }
 
-    val waterReminderFrequency: Flow<Int> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_WATER_REMINDER_FREQUENCY] ?: 60 // Varsayılan her saat
-        }
+    /**
+     * Bildirim titreşimi aktif/pasif
+     */
+    suspend fun setWaterNotificationVibration(enabled: Boolean) {
+        context.dataStore.edit { preferences -> preferences[KEY_WATER_NOTIFICATION_VIBRATION] = enabled }
+    }
+    val waterNotificationVibration: Flow<Boolean> = context.dataStore.data.map { it[KEY_WATER_NOTIFICATION_VIBRATION] ?: true }
+
+    /**
+     * Bildirim önceliği
+     */
+    suspend fun setWaterNotificationPriority(priority: String) {
+        context.dataStore.edit { preferences -> preferences[KEY_WATER_NOTIFICATION_PRIORITY] = priority }
+    }
+    val waterNotificationPriority: Flow<String> = context.dataStore.data.map { it[KEY_WATER_NOTIFICATION_PRIORITY] ?: "DEFAULT" }
+
+    /**
+     * DND modunda bildirim gönderimi
+     */
+    suspend fun setWaterSendInDND(enabled: Boolean) {
+        context.dataStore.edit { preferences -> preferences[KEY_WATER_SEND_IN_DND] = enabled }
+    }
+    val waterSendInDND: Flow<Boolean> = context.dataStore.data.map { it[KEY_WATER_SEND_IN_DND] ?: false }
 
     // === ONBOARDING ===
 
     suspend fun setOnboardingCompleted(completed: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[KEY_ONBOARDING_COMPLETED] = completed
-        }
+        context.dataStore.edit { preferences -> preferences[KEY_ONBOARDING_COMPLETED] = completed }
     }
-
-    val isOnboardingCompleted: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[KEY_ONBOARDING_COMPLETED] ?: false
-        }
+    val isOnboardingCompleted: Flow<Boolean> = context.dataStore.data.map { it[KEY_ONBOARDING_COMPLETED] ?: false }
 
     // === DİĞER METODLAR ===
 
-    /**
-     * Tüm ayarları sıfırla
-     */
     suspend fun clearAll() {
+        context.dataStore.edit { preferences -> preferences.clear() }
+    }
+
+    suspend fun clearWaterSettings() {
         context.dataStore.edit { preferences ->
-            preferences.clear()
+            preferences.remove(KEY_WATER_DAILY_TARGET)
+            preferences.remove(KEY_WATER_REMINDER_ENABLED)
+            preferences.remove(KEY_WATER_REMINDER_START_HOUR)
+            preferences.remove(KEY_WATER_REMINDER_END_HOUR)
+            preferences.remove(KEY_WATER_REMINDER_FREQUENCY)
+            preferences.remove(KEY_WATER_NOTIFICATION_SOUND)
+            preferences.remove(KEY_WATER_NOTIFICATION_VIBRATION)
+            preferences.remove(KEY_WATER_NOTIFICATION_PRIORITY)
+            preferences.remove(KEY_WATER_SEND_IN_DND)
         }
     }
 
     // === BACKWARD COMPATIBILITY ===
 
-    suspend fun getReminderHourImmediate(): Int {
-        return reminderHour.first()
-    }
-
-    suspend fun getReminderMinuteImmediate(): Int {
-        return reminderMinute.first()
-    }
-
-    suspend fun isReminderEnabledImmediate(): Boolean {
-        return isReminderEnabled.first()
-    }
+    suspend fun getReminderHourImmediate(): Int = reminderHour.first()
+    suspend fun getReminderMinuteImmediate(): Int = reminderMinute.first()
+    suspend fun isReminderEnabledImmediate(): Boolean = isReminderEnabled.first()
 }

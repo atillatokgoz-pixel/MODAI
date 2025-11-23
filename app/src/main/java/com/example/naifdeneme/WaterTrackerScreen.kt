@@ -1,4 +1,4 @@
-package com.example.naifdeneme.ui.screens.water
+package com.example.naifdeneme
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -27,6 +27,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -34,24 +37,31 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,18 +73,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.naifdeneme.PreferencesManager
-import com.example.naifdeneme.R
-import com.example.naifdeneme.WaterViewModel
-import com.example.naifdeneme.WaterViewModelFactory
-import com.example.naifdeneme.database.AppDatabase
+import com.example.naifdeneme.database.DrinkType
+import com.example.naifdeneme.ui.components.CustomAmountDialog
+import com.example.naifdeneme.ui.components.DrinkTypeSelector
+import com.example.naifdeneme.ui.components.NoteInputDialog
 import com.example.naifdeneme.ui.screens.water.components.AnimatedWaterProgressRing
-import com.example.naifdeneme.ui.theme.ModaiTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,29 +97,82 @@ fun WaterTrackerScreen(
     onNavigateToReminderSettings: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val viewModel: WaterViewModel = viewModel(
         factory = WaterViewModelFactory(
-            waterDao = AppDatabase.getDatabase(context).waterDao(),
+            waterDao = com.example.naifdeneme.database.AppDatabase.getDatabase(context).waterDao(),
             preferencesManager = PreferencesManager.getInstance(context)
         )
     )
 
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+
+    // Ekran her öne geldiğinde tarihi yenile
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshDate()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // States
     val currentAmount by viewModel.todayTotal.collectAsState()
     val targetAmount by viewModel.dailyTarget.collectAsState()
     val progress by viewModel.progress.collectAsState()
     val isGoalReached by viewModel.isGoalReached.collectAsState()
     val reminderEnabled by viewModel.reminderEnabled.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
+    // UI States
     var selectedAmount by remember { mutableStateOf(500) }
+    var selectedDrinkType by remember { mutableStateOf(DrinkType.WATER) }
     var showTargetDialog by remember { mutableStateOf(false) }
     var showCelebration by remember { mutableStateOf(false) }
+    var showCustomAmountDialog by remember { mutableStateOf(false) }
+    var showNoteDialog by remember { mutableStateOf(false) }
+    var pendingAmount by remember { mutableStateOf(0) }
+    var pendingDrinkType by remember { mutableStateOf(DrinkType.WATER) }
     var buttonScale by remember { mutableStateOf(1f) }
 
+
+    // Permission Launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                viewModel.updateReminderEnabled(true)
+            } else {
+                // İzin verilmedi, kullanıcıya bilgi verilebilir
+                viewModel.updateReminderEnabled(false)
+            }
+        }
+    )
+
+    // Celebration effect
     LaunchedEffect(isGoalReached) {
         if (isGoalReached && !showCelebration) {
             showCelebration = true
             delay(3000)
             showCelebration = false
+        }
+    }
+
+    // Error handling
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearError()
         }
     }
 
@@ -145,7 +210,8 @@ fun WaterTrackerScreen(
                     containerColor = MaterialTheme.colorScheme.background
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -155,6 +221,7 @@ fun WaterTrackerScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Progress Ring
                 Column(
                     modifier = Modifier.padding(vertical = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -180,6 +247,7 @@ fun WaterTrackerScreen(
                     }
                 }
 
+                // Reminder Toggle Card
                 Card(
                     onClick = onNavigateToReminderSettings,
                     modifier = Modifier
@@ -242,7 +310,17 @@ fun WaterTrackerScreen(
                         Switch(
                             checked = reminderEnabled,
                             onCheckedChange = { enabled ->
-                                viewModel.updateReminderEnabled(enabled)
+                                if (enabled) {
+                                    // Eğer Android 13+ ise ve izin yoksa iste
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    } else {
+                                        // Eski sürümse direkt aç
+                                        viewModel.updateReminderEnabled(true)
+                                    }
+                                } else {
+                                    viewModel.updateReminderEnabled(false)
+                                }
                             },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
@@ -256,6 +334,18 @@ fun WaterTrackerScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // Drink Type Selector
+                DrinkTypeSelector(
+                    selectedType = selectedDrinkType,
+                    onTypeSelected = { selectedDrinkType = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Amount Selector
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -296,57 +386,121 @@ fun WaterTrackerScreen(
                                 )
                             }
                         }
+                        // Custom amount button
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .background(
+                                    color = Color.Transparent,
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                                .clickable { showCustomAmountDialog = true },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.custom_amount),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                val animatedScale by animateFloatAsState(
-                    targetValue = buttonScale,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    ),
-                    finishedListener = { buttonScale = 1f },
-                    label = "button_scale"
-                )
-
-                Button(
-                    onClick = {
-                        viewModel.addWater(selectedAmount)
-                        buttonScale = 0.95f
-                    },
+                // Add Button with Note Option
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .height(56.dp)
-                        .scale(animatedScale)
-                        .shadow(
-                            elevation = 12.dp,
-                            shape = MaterialTheme.shapes.large,
-                            spotColor = neonCyan.copy(alpha = 0.4f)
-                        ),
-                    shape = MaterialTheme.shapes.large,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = neonCyan
-                    )
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        tint = Color.Black
+                    // Main Add Button
+                    val animatedScale by animateFloatAsState(
+                        targetValue = buttonScale,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        finishedListener = { buttonScale = 1f },
+                        label = "button_scale"
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.add_water, selectedAmount),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+
+                    Button(
+                        onClick = {
+                            viewModel.addWater(selectedAmount, selectedDrinkType, null)
+                            buttonScale = 0.95f
+
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = context.getString(R.string.water_added_success, selectedAmount),
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp)
+                            .scale(animatedScale)
+                            .shadow(
+                                elevation = 12.dp,
+                                shape = MaterialTheme.shapes.large,
+                                spotColor = neonCyan.copy(alpha = 0.4f)
+                            ),
+                        shape = MaterialTheme.shapes.large,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = neonCyan
+                        ),
+                        enabled = uiState !is WaterUiState.Loading
+                    ) {
+                        if (uiState is WaterUiState.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.Black
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                tint = Color.Black
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.add_water, selectedAmount),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
+                    }
+
+                    // Add with Note Button
+                    OutlinedButton(
+                        onClick = {
+                            pendingAmount = selectedAmount
+                            pendingDrinkType = selectedDrinkType
+                            showNoteDialog = true
+                        },
+                        modifier = Modifier
+                            .height(56.dp)
+                            .width(56.dp),
+                        shape = MaterialTheme.shapes.large,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = neonCyan
+                        ),
+                        enabled = uiState !is WaterUiState.Loading
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Create,
+                            contentDescription = stringResource(R.string.add_note)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
 
+                // Daily Stats
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -420,6 +574,7 @@ fun WaterTrackerScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // Recent Activities
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -434,7 +589,7 @@ fun WaterTrackerScreen(
                     )
 
                     val entries by viewModel.todayEntries.collectAsState()
-                    val recentEntries = entries.take(3)
+                    val recentEntries = entries.take(5)
 
                     if (recentEntries.isEmpty()) {
                         Card(
@@ -461,6 +616,8 @@ fun WaterTrackerScreen(
                                     String.format("%02d:%02d", calendar.get(java.util.Calendar.HOUR_OF_DAY), calendar.get(java.util.Calendar.MINUTE))
                                 }
 
+                                val drinkType = DrinkType.fromId(entry.drinkType)
+
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = MaterialTheme.shapes.large,
@@ -486,11 +643,9 @@ fun WaterTrackerScreen(
                                                     .background(neonCyan.copy(alpha = 0.2f)),
                                                 contentAlignment = Alignment.Center
                                             ) {
-                                                Icon(
-                                                    painter = painterResource(id = R.drawable.ic_water_drop),
-                                                    contentDescription = stringResource(R.string.cd_water_drop),
-                                                    tint = neonCyan,
-                                                    modifier = Modifier.size(20.dp)
+                                                Text(
+                                                    text = drinkType.emoji,
+                                                    style = MaterialTheme.typography.titleMedium
                                                 )
                                             }
 
@@ -510,11 +665,37 @@ fun WaterTrackerScreen(
                                             }
                                         }
 
-                                        Text(
-                                            text = time,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = time,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+
+                                            // Delete button
+                                            IconButton(
+                                                onClick = {
+                                                    viewModel.deleteEntry(entry.id)
+                                                    scope.launch {
+                                                        snackbarHostState.showSnackbar(
+                                                            message = "Kayıt silindi",
+                                                            duration = SnackbarDuration.Short
+                                                        )
+                                                    }
+                                                },
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Delete,
+                                                    contentDescription = stringResource(R.string.delete_entry),
+                                                    tint = MaterialTheme.colorScheme.error,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -525,6 +706,7 @@ fun WaterTrackerScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // Celebration Overlay
             if (showCelebration) {
                 val infiniteTransition = rememberInfiniteTransition(label = "celebration")
                 val scale by infiniteTransition.animateFloat(
@@ -540,7 +722,8 @@ fun WaterTrackerScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f)),
+                        .background(Color.Black.copy(alpha = 0.3f))
+                        .clickable { showCelebration = false },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -556,6 +739,7 @@ fun WaterTrackerScreen(
         }
     }
 
+    // Target Dialog
     if (showTargetDialog) {
         var targetValue by remember { mutableStateOf(targetAmount) }
         AlertDialog(
@@ -607,17 +791,33 @@ fun WaterTrackerScreen(
             }
         )
     }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun WaterTrackerScreenPreview() {
-    ModaiTheme(darkTheme = false) {
-        WaterTrackerScreen(
-            onNavigateBack = {},
-            onNavigateToSettings = {},
-            onNavigateToHistory = {},
-            onNavigateToReminderSettings = {}
+    // Custom Amount Dialog
+    if (showCustomAmountDialog) {
+        CustomAmountDialog(
+            onDismiss = { showCustomAmountDialog = false },
+            onConfirm = { amount ->
+                selectedAmount = amount
+                showCustomAmountDialog = false
+            }
+        )
+    }
+
+    // Note Input Dialog
+    if (showNoteDialog) {
+        NoteInputDialog(
+            onDismiss = { showNoteDialog = false },
+            onConfirm = { note ->
+                viewModel.addWater(pendingAmount, pendingDrinkType, note)
+                showNoteDialog = false
+
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = context.getString(R.string.water_added_success, pendingAmount),
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
         )
     }
 }

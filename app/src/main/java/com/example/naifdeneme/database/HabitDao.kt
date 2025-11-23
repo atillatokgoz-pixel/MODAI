@@ -8,6 +8,10 @@ interface HabitDao {
     @Query("SELECT * FROM habits ORDER BY createdAt DESC")
     fun getAllHabits(): Flow<List<HabitEntity>>
 
+    // 🔥 YENİ: Kategoriye göre alışkanlıkları getir
+    @Query("SELECT * FROM habits WHERE category = :category ORDER BY createdAt DESC")
+    fun getHabitsByCategory(category: String): Flow<List<HabitEntity>>
+
     @Query("SELECT COUNT(*) FROM habits")
     suspend fun getAllHabitsCount(): Int
 
@@ -28,6 +32,9 @@ interface HabitDao {
 
     @Update
     suspend fun updateHabit(habit: HabitEntity)
+
+    @Query("UPDATE habits SET currentProgress = :progress WHERE id = :habitId")
+    suspend fun updateProgress(habitId: Long, progress: Int)
 
     @Transaction
     suspend fun completeHabit(habitId: Long) {

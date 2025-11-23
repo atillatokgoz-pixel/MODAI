@@ -32,7 +32,6 @@ fun WaterHistoryScreen(
 ) {
     val context = LocalContext.current
 
-    // ViewModel
     val viewModel: WaterViewModel = viewModel(
         factory = WaterViewModelFactory(
             waterDao = AppDatabase.getDatabase(context).waterDao(),
@@ -40,7 +39,6 @@ fun WaterHistoryScreen(
         )
     )
 
-    // States
     var selectedPeriod by remember { mutableStateOf(HistoryPeriod.WEEKLY) }
     val weeklyStats by viewModel.weeklyStats.collectAsState()
     val targetAmount by viewModel.dailyTarget.collectAsState()
@@ -58,7 +56,10 @@ fun WaterHistoryScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -73,7 +74,6 @@ fun WaterHistoryScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Segmented Control
             HistoryPeriodSelector(
                 selectedPeriod = selectedPeriod,
                 onPeriodSelected = { selectedPeriod = it },
@@ -82,7 +82,6 @@ fun WaterHistoryScreen(
                     .padding(16.dp)
             )
 
-            // Summary Card
             HistorySummaryCard(
                 weeklyStats = weeklyStats,
                 targetAmount = targetAmount,
@@ -94,7 +93,6 @@ fun WaterHistoryScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Bar Chart
             HistoryBarChart(
                 weeklyStats = weeklyStats,
                 targetAmount = targetAmount,
@@ -105,7 +103,6 @@ fun WaterHistoryScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Stats Cards
             StatsCardsSection(
                 weeklyStats = weeklyStats,
                 targetAmount = targetAmount,
@@ -117,20 +114,13 @@ fun WaterHistoryScreen(
     }
 }
 
-/**
- * Period Selector (Segmented Control)
- */
 @Composable
 fun HistoryPeriodSelector(
     selectedPeriod: HistoryPeriod,
     onPeriodSelected: (HistoryPeriod) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val periods = listOf(
-        HistoryPeriod.DAILY,
-        HistoryPeriod.WEEKLY,
-        HistoryPeriod.MONTHLY
-    )
+    val periods = listOf(HistoryPeriod.DAILY, HistoryPeriod.WEEKLY, HistoryPeriod.MONTHLY)
     val neonCyan = Color(0xFF06F9F9)
 
     Box(
@@ -148,7 +138,6 @@ fun HistoryPeriodSelector(
         ) {
             periods.forEach { period ->
                 val isSelected = selectedPeriod == period
-
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -172,9 +161,6 @@ fun HistoryPeriodSelector(
     }
 }
 
-/**
- * Summary Card
- */
 @Composable
 fun HistorySummaryCard(
     weeklyStats: List<DailyWaterStat>,
@@ -183,14 +169,12 @@ fun HistorySummaryCard(
     modifier: Modifier = Modifier
 ) {
     val average = remember(weeklyStats) {
-        if (weeklyStats.isEmpty()) 0
-        else weeklyStats.map { it.amount }.average().toInt()
+        if (weeklyStats.isEmpty()) 0 else weeklyStats.map { it.amount }.average().toInt()
     }
 
     val dateRange = remember(weeklyStats) {
-        if (weeklyStats.isEmpty()) ""
-        else {
-            val sdf = SimpleDateFormat("d MMM", Locale("tr"))
+        if (weeklyStats.isEmpty()) "" else {
+            val sdf = SimpleDateFormat("d MMM", Locale.getDefault())
             val first = weeklyStats.first().date
             val last = weeklyStats.last().date
             "${sdf.format(first)} - ${sdf.format(last)}"
@@ -199,14 +183,10 @@ fun HistorySummaryCard(
 
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -214,12 +194,12 @@ fun HistorySummaryCard(
             ) {
                 Column {
                     Text(
-                        text = "Bu Hafta Ortalaması",
+                        text = stringResource(R.string.weekly_average),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "${average} ml / gün",
+                        text = stringResource(R.string.ml_per_day, average),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -234,9 +214,6 @@ fun HistorySummaryCard(
     }
 }
 
-/**
- * Bar Chart
- */
 @Composable
 fun HistoryBarChart(
     weeklyStats: List<DailyWaterStat>,
@@ -247,9 +224,7 @@ fun HistoryBarChart(
 
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -270,18 +245,12 @@ fun HistoryBarChart(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        // Bar
                         Box(
                             modifier = Modifier
                                 .width(28.dp)
                                 .fillMaxHeight(percentage)
-                                .background(
-                                    color = neonCyan,
-                                    shape = MaterialTheme.shapes.small
-                                )
+                                .background(color = neonCyan, shape = MaterialTheme.shapes.small)
                         )
-
-                        // Day label
                         Text(
                             text = stat.dayName,
                             style = MaterialTheme.typography.labelSmall,
@@ -294,9 +263,6 @@ fun HistoryBarChart(
     }
 }
 
-/**
- * Stats Cards Section
- */
 @Composable
 fun StatsCardsSection(
     weeklyStats: List<DailyWaterStat>,
@@ -304,8 +270,7 @@ fun StatsCardsSection(
     modifier: Modifier = Modifier
 ) {
     val weeklyAverage = remember(weeklyStats) {
-        if (weeklyStats.isEmpty()) 0
-        else weeklyStats.map { it.amount }.average().toInt()
+        if (weeklyStats.isEmpty()) 0 else weeklyStats.map { it.amount }.average().toInt()
     }
 
     val goalReachedDays = remember(weeklyStats, targetAmount) {
@@ -313,8 +278,7 @@ fun StatsCardsSection(
     }
 
     val goalReachedPercentage = remember(weeklyStats, goalReachedDays) {
-        if (weeklyStats.isEmpty()) 0
-        else (goalReachedDays * 100 / weeklyStats.size)
+        if (weeklyStats.isEmpty()) 0 else ((goalReachedDays.toFloat() / weeklyStats.size) * 100).toInt()
     }
 
     Column(
@@ -322,7 +286,7 @@ fun StatsCardsSection(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "İstatistikler",
+            text = stringResource(R.string.statistics),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
@@ -331,16 +295,13 @@ fun StatsCardsSection(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Haftalık Ortalama
             StatCard(
-                title = "Haftalık Ortalama",
-                value = "${weeklyAverage} ml",
+                title = stringResource(R.string.weekly_average_label),
+                value = stringResource(R.string.ml_per_day, weeklyAverage),
                 modifier = Modifier.weight(1f)
             )
-
-            // Hedefe Ulaşma
             StatCard(
-                title = "Hedefe Ulaşma",
+                title = stringResource(R.string.goal_reached_days),
                 value = "$goalReachedPercentage%",
                 modifier = Modifier.weight(1f)
             )
@@ -356,13 +317,9 @@ fun StatCard(
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodySmall,
@@ -379,9 +336,6 @@ fun StatCard(
     }
 }
 
-/**
- * History Period Enum
- */
 enum class HistoryPeriod(val labelRes: Int) {
     DAILY(R.string.history_daily),
     WEEKLY(R.string.history_weekly),

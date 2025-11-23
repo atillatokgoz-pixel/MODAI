@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
+        android:name=".ModaiApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -13,15 +16,25 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NaifDeneme"
         tools:targetApi="31">
+
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.NaifDeneme">
+            android:theme="@style/Theme.NaifDeneme"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- 🔥 YENİ: Deep linking for notifications -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="modai" android:host="water" />
             </intent-filter>
         </activity>
 
@@ -64,12 +77,21 @@
                 android:resource="@xml/finance_widget_info" />
         </receiver>
 
-        <!-- Bildirimden Habit Tamamlama Receiver -->
+        <!-- Habit Complete Receiver -->
         <receiver
             android:name=".HabitCompleteReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.example.naifdeneme.COMPLETE_HABIT" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 🔥 YENİ: Quick Add Water Receiver -->
+        <receiver
+            android:name=".QuickAddWaterReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.naifdeneme.ACTION_ADD_WATER" />
             </intent-filter>
         </receiver>
 

@@ -1,428 +1,387 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.example.naifdeneme
 
-import android.Manifest
-import android.os.Build
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+
+import android.app.Activity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Contrast
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PrivacyTip
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.naifdeneme.database.AppDatabase
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.first
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
-    val prefsManager = remember { PreferencesManager.getInstance(context) }
     val scope = rememberCoroutineScope()
+    val prefsManager = remember { PreferencesManager.getInstance(context) }
     val database = remember { AppDatabase.getDatabase(context) }
 
-    var userName by remember { mutableStateOf("") }
-    var isDarkMode by remember { mutableStateOf(false) }
-    var language by remember { mutableStateOf("tr") }
+    val isDarkMode by prefsManager.isDarkMode.collectAsState(initial = false)
+    val currentLanguage by prefsManager.language.collectAsState(initial = "tr")
+    val userName by prefsManager.userName.collectAsState(initial = stringResource(R.string.default_user_name))
+
     var showNameDialog by remember { mutableStateOf(false) }
-    var showClearDataDialog by remember { mutableStateOf(false) }
-    var showThemeDialog by remember { mutableStateOf(false) }
-    var showLanguageDialog by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(Unit) {
-        userName = prefsManager.getUserNameImmediate()
-        isDarkMode = prefsManager.isDarkMode.first()
-        language = prefsManager.language.first()
-
-        prefsManager.userName.collectLatest { name -> userName = name }
-        prefsManager.isDarkMode.collectLatest { darkMode -> isDarkMode = darkMode }
-        prefsManager.language.collectLatest { lang -> language = lang }
-    }
-
-    val testPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            NotificationHelper.scheduleTestReminder(context)
-            scope.launch {
-                snackbarHostState.showSnackbar("Test bildirimi 1 dakika sonra gelecek ⏰")
-            }
-        } else {
-            scope.launch {
-                snackbarHostState.showSnackbar("Bildirim izni gerekli!")
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        NotificationHelper.createNotificationChannel(context)
-    }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_title)) },
+            CenterAlignedTopAppBar(
+                title = { Text(stringResource(R.string.settings_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, stringResource(R.string.settings_back))
+                        Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Geri")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.8f)
+                )
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+        containerColor = MaterialTheme.colorScheme.background
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(padding)
                 .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Section(title = stringResource(R.string.settings_profile)) {
+
+            // --- 1. HESAP AYARLARI ---
+            SettingsSection(title = "HESAP AYARLARI") {
                 SettingsItem(
                     icon = Icons.Default.Person,
+                    iconBgColor = Color(0xFFF4E2D0),
+                    iconTint = Color(0xFFA2633A),
                     title = stringResource(R.string.settings_username),
                     subtitle = userName,
                     onClick = { showNameDialog = true }
                 )
-            }
-
-            Section(title = "Görünüm") {
+                Divider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), modifier = Modifier.padding(start = 56.dp))
                 SettingsItem(
-                    icon = Icons.Default.Settings,
-                    title = "Tema",
-                    subtitle = if (isDarkMode) "Koyu" else "Açık",
-                    onClick = { showThemeDialog = true }
-                )
-
-                SettingsItem(
-                    icon = Icons.Default.Info,
-                    title = "Dil",
-                    subtitle = when (language) {
-                        "tr" -> "Türkçe"
-                        "en" -> "English"
-                        else -> "Türkçe"
-                    },
-                    onClick = { showLanguageDialog = true }
+                    icon = Icons.Default.Lock,
+                    iconBgColor = Color(0xFFF4E2D0),
+                    iconTint = Color(0xFFA2633A),
+                    title = "Şifre",
+                    onClick = { /* TODO */ }
                 )
             }
 
-            Section(title = stringResource(R.string.settings_app)) {
-                SettingsItem(
-                    icon = Icons.Default.Info,
-                    title = stringResource(R.string.settings_version),
-                    subtitle = stringResource(R.string.settings_version_number),
-                    onClick = null
-                )
-
-                SettingsItem(
-                    icon = Icons.Default.Star,
-                    title = stringResource(R.string.settings_rate_app),
-                    subtitle = stringResource(R.string.settings_rate_app_desc),
-                    onClick = { }
-                )
-            }
-
-            Section(title = stringResource(R.string.settings_notifications)) {
-                Card(
+            // --- 2. UYGULAMA TERCİHLERİ ---
+            SettingsSection(title = "UYGULAMA TERCİHLERİ") {
+                // Bildirimler
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                        .clickable { /* Toggle Logic */ }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFA7D7F9)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Notifications, null, tint = Color(0xFF2E6A94))
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Text(
+                        stringResource(R.string.settings_notifications),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
                     )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Text(
-                            "Her alışkanlık için bildirim ayarlarını alışkanlık detay ekranından yapabilirsiniz.",
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
+                    Switch(checked = true, onCheckedChange = {})
                 }
 
-                Surface(
+                Divider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), modifier = Modifier.padding(start = 56.dp))
+
+                // Dil Seçimi
+                SettingsItem(
+                    icon = Icons.Default.Language,
+                    iconBgColor = Color(0xFFA7D7F9),
+                    iconTint = Color(0xFF2E6A94),
+                    title = stringResource(R.string.settings_language),
+                    trailingContent = {
+                        Text(
+                            if (currentLanguage == "tr") "Türkçe" else "English",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                    },
+                    onClick = {
+                        val newLang = if (currentLanguage == "tr") "en" else "tr"
+                        scope.launch {
+                            prefsManager.setLanguage(newLang)
+                            (context as? Activity)?.recreate()
+                        }
+                    }
+                )
+
+                Divider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), modifier = Modifier.padding(start = 56.dp))
+
+                // Tema Seçimi
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = MaterialTheme.shapes.medium
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFFA7D7F9)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "🧪 Test Modu",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                            Text(
-                                text = "1 dakika sonra test bildirimi",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                            )
-                        }
-                        Button(
-                            onClick = {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    if (NotificationHelper.hasNotificationPermission(context)) {
-                                        NotificationHelper.scheduleTestReminder(context)
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar("Test bildirimi planlandı ⏰")
-                                        }
-                                    } else {
-                                        testPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                                    }
-                                } else {
-                                    NotificationHelper.scheduleTestReminder(context)
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("Test bildirimi planlandı ⏰")
-                                    }
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary
-                            )
-                        ) {
-                            Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Contrast, null, tint = Color(0xFF2E6A94))
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Text(
+                        stringResource(R.string.settings_theme),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    // Segmented Control Benzeri Yapı
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(modifier = Modifier.padding(4.dp)) {
+                            ThemeOptionBtn("Açık", !isDarkMode) { scope.launch { prefsManager.setDarkMode(false) } }
                             Spacer(Modifier.width(4.dp))
-                            Text("Test", fontSize = 12.sp)
+                            ThemeOptionBtn("Koyu", isDarkMode) { scope.launch { prefsManager.setDarkMode(true) } }
                         }
                     }
                 }
             }
 
-            Section(title = stringResource(R.string.settings_data)) {
+            // --- 3. GİZLİLİK ---
+            SettingsSection(title = "GİZLİLİK VE GÜVENLİK") {
                 SettingsItem(
-                    icon = Icons.Default.Delete,
-                    title = stringResource(R.string.settings_clear_all_data),
-                    subtitle = stringResource(R.string.settings_clear_all_data_desc),
-                    onClick = { showClearDataDialog = true },
-                    textColor = MaterialTheme.colorScheme.error
+                    icon = Icons.Default.PrivacyTip,
+                    iconBgColor = Color(0xFFA2E4B8),
+                    iconTint = Color(0xFF34754A),
+                    title = "Gizlilik Politikası",
+                    onClick = {}
+                )
+                Divider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), modifier = Modifier.padding(start = 56.dp))
+                SettingsItem(
+                    icon = Icons.Default.Security,
+                    iconBgColor = Color(0xFFA2E4B8),
+                    iconTint = Color(0xFF34754A),
+                    title = "Güvenlik Ayarları",
+                    onClick = {}
                 )
             }
 
-            Section(title = stringResource(R.string.settings_about)) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(stringResource(R.string.app_name), fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    Text(stringResource(R.string.app_tagline), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.settings_made_with_love), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // --- 4. VERİ YÖNETİMİ ---
+            SettingsSection(title = stringResource(R.string.settings_data)) {
+                SettingsItem(
+                    icon = Icons.Default.DeleteForever,
+                    iconBgColor = Color(0xFFF9C4C4),
+                    iconTint = Color(0xFF9D4D4D),
+                    title = stringResource(R.string.settings_clear_all_data),
+                    onClick = { showDeleteDialog = true }
+                )
+            }
+
+            // --- 5. ÇIKIŞ YAP ---
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                modifier = Modifier.fillMaxWidth().clickable { /* Logout */ }
+            ) {
+                Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                    Text("Çıkış Yap", color = Color.Red, fontWeight = FontWeight.Bold)
                 }
             }
+
+            Spacer(Modifier.height(20.dp))
         }
     }
 
+    // --- DIALOGS ---
     if (showNameDialog) {
-        NameDialog(
-            currentName = userName,
-            onDismiss = { showNameDialog = false },
-            onSave = { newName ->
-                scope.launch { prefsManager.setUserName(newName) }
-                showNameDialog = false
-            }
-        )
+        NameDialog(userName, { showNameDialog = false }, { name ->
+            scope.launch { prefsManager.setUserName(name) }
+            showNameDialog = false
+        })
     }
 
-    if (showThemeDialog) {
-        ThemeDialog(
-            currentTheme = isDarkMode,
-            onDismiss = { showThemeDialog = false },
-            onThemeChange = { isDarkMode ->
-                scope.launch { prefsManager.setDarkMode(isDarkMode) }
-                showThemeDialog = false
-            }
-        )
-    }
-
-    if (showLanguageDialog) {
-        LanguageDialog(
-            currentLanguage = language,
-            onDismiss = { showLanguageDialog = false },
-            onLanguageChange = { newLanguage ->
-                scope.launch { prefsManager.setLanguage(newLanguage) }
-                showLanguageDialog = false
-            }
-        )
-    }
-
-    if (showClearDataDialog) {
+    if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { showClearDataDialog = false },
+            onDismissRequest = { showDeleteDialog = false },
             icon = { Icon(Icons.Default.Warning, null, tint = MaterialTheme.colorScheme.error) },
             title = { Text(stringResource(R.string.clear_data_title)) },
             text = { Text(stringResource(R.string.clear_data_message)) },
             confirmButton = {
-                TextButton(onClick = {
-                    scope.launch {
-                        database.clearAllTables()
-                        prefsManager.clearAll()
-                        userName = prefsManager.getUserNameImmediate()
-                        isDarkMode = prefsManager.isDarkMode.first()
-                        language = prefsManager.language.first()
-                    }
-                    showClearDataDialog = false
-                }) {
-                    Text(stringResource(R.string.settings_clear_data_confirm), color = MaterialTheme.colorScheme.error)
-                }
+                Button(
+                    onClick = {
+                        scope.launch(Dispatchers.IO) {
+                            database.clearAllTables()
+                            prefsManager.clearAll()
+                            (context as? Activity)?.recreate()
+                        }
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text(stringResource(R.string.dialog_delete)) }
             },
-            dismissButton = {
-                TextButton(onClick = { showClearDataDialog = false }) {
-                    Text(stringResource(R.string.dialog_cancel))
-                }
-            }
+            dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.dialog_cancel)) } }
         )
     }
 }
 
-@Composable
-fun ThemeDialog(currentTheme: Boolean, onDismiss: () -> Unit, onThemeChange: (Boolean) -> Unit) {
-    var selectedTheme by remember { mutableStateOf(currentTheme) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Default.Settings, null) },
-        title = { Text("Tema Seçimi") },
-        text = {
-            Column {
-                ThemeOption(title = "🌞 Açık Tema", selected = !selectedTheme, onClick = { selectedTheme = false })
-                Spacer(modifier = Modifier.height(8.dp))
-                ThemeOption(title = "🌙 Koyu Tema", selected = selectedTheme, onClick = { selectedTheme = true })
-            }
-        },
-        confirmButton = { TextButton(onClick = { onThemeChange(selectedTheme) }) { Text("Uygula") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) } }
-    )
-}
+// --- COMPONENTS ---
 
 @Composable
-fun LanguageDialog(currentLanguage: String, onDismiss: () -> Unit, onLanguageChange: (String) -> Unit) {
-    var selectedLanguage by remember { mutableStateOf(currentLanguage) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Default.Info, null) },
-        title = { Text("Dil Seçimi") },
-        text = {
-            Column {
-                LanguageOption(title = "🇹🇷 Türkçe", selected = selectedLanguage == "tr", onClick = { selectedLanguage = "tr" })
-                Spacer(modifier = Modifier.height(8.dp))
-                LanguageOption(title = "🇺🇸 English", selected = selectedLanguage == "en", onClick = { selectedLanguage = "en" })
-            }
-        },
-        confirmButton = { TextButton(onClick = { onLanguageChange(selectedLanguage) }) { Text("Uygula") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) } }
-    )
-}
-
-@Composable
-fun ThemeOption(title: String, selected: Boolean, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = title,
-                fontSize = 16.sp,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-            )
-            if (selected) { Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
-        }
-    }
-}
-
-@Composable
-fun LanguageOption(title: String, selected: Boolean, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = title,
-                fontSize = 16.sp,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-            )
-            if (selected) { Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
-        }
-    }
-}
-
-@Composable
-fun Section(title: String, content: @Composable () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = title,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            style = MaterialTheme.typography.labelMedium,
+            color = Color.Gray,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp)
         )
-        content()
-        Spacer(modifier = Modifier.height(8.dp))
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column { content() }
+        }
     }
 }
 
 @Composable
-fun SettingsItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: (() -> Unit)?, textColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface) {
-    Surface(onClick = onClick ?: {}, enabled = onClick != null, modifier = Modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = textColor, modifier = Modifier.size(24.dp))
-            Spacer(Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(title, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = textColor)
-                Text(subtitle, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (onClick != null) { Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
+fun SettingsItem(
+    icon: ImageVector,
+    iconBgColor: Color,
+    iconTint: Color,
+    title: String,
+    subtitle: String? = null,
+    trailingContent: @Composable (() -> Unit)? = null,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(iconBgColor),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, null, tint = iconTint)
         }
+        Spacer(Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            if (subtitle != null) {
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            }
+        }
+        if (trailingContent != null) {
+            trailingContent()
+        } else {
+            Icon(Icons.Default.ChevronRight, null, tint = Color.Gray)
+        }
+    }
+}
+
+@Composable
+fun ThemeOptionBtn(text: String, selected: Boolean, onClick: () -> Unit) {
+    val bgColor = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent
+    val textColor = if (selected) MaterialTheme.colorScheme.primary else Color.Gray
+    val shadow = if (selected) 2.dp else 0.dp
+
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(6.dp),
+        color = bgColor,
+        shadowElevation = shadow
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelMedium,
+            color = textColor,
+            fontWeight = if(selected) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }
 
@@ -431,16 +390,14 @@ fun NameDialog(currentName: String, onDismiss: () -> Unit, onSave: (String) -> U
     var name by remember { mutableStateOf(currentName) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Default.Person, null) },
-        title = { Text(stringResource(R.string.settings_name_dialog_title)) },
+        title = { Text("Kullanıcı Adı") },
         text = {
             OutlinedTextField(
                 value = name, onValueChange = { name = it },
-                label = { Text(stringResource(R.string.settings_name_dialog_label)) },
-                singleLine = true, modifier = Modifier.fillMaxWidth()
+                label = { Text("Adınız") }, singleLine = true
             )
         },
-        confirmButton = { TextButton(onClick = { if (name.isNotBlank()) onSave(name.trim()) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.dialog_save)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) } }
+        confirmButton = { TextButton(onClick = { if (name.isNotBlank()) onSave(name.trim()) }) { Text("Kaydet") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("İptal") } }
     )
 }

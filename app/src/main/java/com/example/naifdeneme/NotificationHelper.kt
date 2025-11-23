@@ -18,17 +18,33 @@ import kotlinx.coroutines.withContext
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+/**
+ * Notification Helper
+ * Merkezi bildirim yönetimi (Habit, Water, Medicine)
+ */
 object NotificationHelper {
     private const val TAG = "NotificationHelper"
-    private const val CHANNEL_ID = "habit_reminder"
+
+    // Channel IDs
+    private const val HABIT_CHANNEL_ID = "habit_reminder"
+    const val WATER_REMINDER_CHANNEL_ID = "water_reminder_channel"
+    const val MEDICINE_REMINDER_CHANNEL_ID = "medicine_reminder_channel"
+
     private const val TEST_WORK_NAME = "test_reminder"
 
     private fun getWorkName(habitId: Long) = "habit_reminder_$habitId"
 
-    fun createNotificationChannel(context: Context) {
+    /**
+     * TÜM notification channel'ları oluştur
+     * Application.onCreate()'de çağrılmalı
+     */
+    fun createNotificationChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            // 1. Habit Reminder Channel
+            val habitChannel = NotificationChannel(
+                HABIT_CHANNEL_ID,
                 "Alışkanlık Hatırlatmaları",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
@@ -37,12 +53,49 @@ object NotificationHelper {
                 enableLights(true)
             }
 
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+            // 2. Water Reminder Channel
+            val waterChannel = NotificationChannel(
+                WATER_REMINDER_CHANNEL_ID,
+                context.getString(R.string.notification_channel_name),
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = context.getString(R.string.notification_channel_description)
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 250, 250, 250)
+                setShowBadge(true)
+            }
 
-            Log.d(TAG, "Notification channel created: $CHANNEL_ID")
+            // 3. Medicine Reminder Channel
+            val medicineChannel = NotificationChannel(
+                MEDICINE_REMINDER_CHANNEL_ID,
+                "İlaç Hatırlatıcıları",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "İlaç içme hatırlatmaları"
+                enableVibration(true)
+                setShowBadge(true)
+            }
+
+            // Register all channels
+            notificationManager.createNotificationChannel(habitChannel)
+            notificationManager.createNotificationChannel(waterChannel)
+            notificationManager.createNotificationChannel(medicineChannel)
+
+            Log.d(TAG, "All notification channels created")
         }
     }
+
+    /**
+     * @Deprecated: createNotificationChannels() kullanın
+     */
+    @Deprecated("Use createNotificationChannels() instead")
+    fun createNotificationChannel(context: Context) {
+        createNotificationChannels(context)
+    }
+
+    // ============================================
+    // HABIT REMINDER METHODS (MEVCUT - KORUNDU)
+    // ============================================
 
     fun scheduleTestReminder(context: Context) {
         Log.d(TAG, "Test reminder scheduled for 1 minute")
@@ -140,7 +193,7 @@ object NotificationHelper {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val notification = NotificationCompat.Builder(context, HABIT_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("$habitIcon $habitName")
             .setContentText("Zamanı geldi! Tamamlamak için dokun.")
@@ -177,7 +230,7 @@ object NotificationHelper {
             PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val notification = NotificationCompat.Builder(context, HABIT_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("🧪 Test Bildirimi")
             .setContentText("Bildirim sistemi çalışıyor!")
@@ -195,6 +248,13 @@ object NotificationHelper {
         }
     }
 
+    // ============================================
+    // UTILITY METHODS (YENİ)
+    // ============================================
+
+    /**
+     * Bildirim izni var mı?
+     */
     fun hasNotificationPermission(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             NotificationManagerCompat.from(context).areNotificationsEnabled()
@@ -202,7 +262,67 @@ object NotificationHelper {
             true
         }
     }
+
+    /**
+     * Bildirim gösterilebilir mi?
+     */
+    fun canShowNotification(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+        return true
+    }
+
+    /**
+     * Do Not Disturb modunu kontrol et
+     */
+    fun isInDoNotDisturbMode(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val currentFilter = notificationManager.currentInterruptionFilter
+
+            return when (currentFilter) {
+                NotificationManager.INTERRUPTION_FILTER_NONE,
+                NotificationManager.INTERRUPTION_FILTER_ALARMS -> true
+                else -> false
+            }
+        }
+        return false
+    }
+
+    /**
+     * Notification ID generator
+     */
+    fun generateNotificationId(): Int {
+        return System.currentTimeMillis().toInt()
+    }
+
+    /**
+     * Tüm bildirimleri iptal et
+     */
+    fun cancelAllNotifications(context: Context) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancelAll()
+    }
+
+    /**
+     * Notification priority'yi importance'a çevir
+     */
+    fun getNotificationPriority(priority: String): Int {
+        return when (priority.uppercase()) {
+            "HIGH" -> NotificationCompat.PRIORITY_HIGH
+            "LOW" -> NotificationCompat.PRIORITY_LOW
+            else -> NotificationCompat.PRIORITY_DEFAULT
+        }
+    }
 }
+
+// ============================================
+// WORKERS (MEVCUT - KORUNDU)
+// ============================================
 
 class HabitReminderWorker(
     context: Context,

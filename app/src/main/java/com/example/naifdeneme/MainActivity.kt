@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -15,13 +16,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.naifdeneme.ui.screens.MainScreen
+import androidx.navigation.navArgument
+import com.example.naifdeneme.domain.model.HabitSource
+import com.example.naifdeneme.ui.screens.dashboard.DashboardScreen
 import com.example.naifdeneme.ui.screens.finance.FinanceScreen
-import com.example.naifdeneme.ui.screens.water.WaterTrackerScreen
+import com.example.naifdeneme.ui.screens.habit.AddHabitScreen
+import com.example.naifdeneme.ui.screens.habit.CategoryHabitScreen
 import com.example.naifdeneme.ui.theme.ModaiTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -29,7 +33,6 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
-    // 🔥 DİL DEĞİŞİKLİĞİ İÇİN GEREKLİ
     override fun attachBaseContext(newBase: Context) {
         val prefs = PreferencesManager.getInstance(newBase)
         val language = runBlocking { prefs.language.first() }
@@ -42,8 +45,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val startDestination = intent?.getStringExtra("navigate_to") ?: "main"
+
         setContent {
-            // 🔥 TEMA DEĞİŞİKLİĞİNİ DİNLE
             val prefsManager = remember { PreferencesManager.getInstance(this) }
             val isDarkMode by prefsManager.isDarkMode.collectAsState(initial = false)
 
@@ -52,7 +57,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation()
+                    AppNavigation(startDestination = startDestination)
                 }
             }
         }
@@ -60,17 +65,17 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(startDestination: String = "main") {
     val navController = rememberNavController()
     val context = LocalContext.current
     val prefsManager = remember { PreferencesManager.getInstance(context) }
 
-    // 🔥 Son ekranı kontrol et (recreate sonrası geri dönmek için)
     val lastScreen by prefsManager.lastScreen.collectAsState(initial = "main")
+    val initialRoute = if (startDestination != "main") startDestination else lastScreen
 
-    LaunchedEffect(lastScreen) {
-        if (lastScreen != "main") {
-            navController.navigate(lastScreen) {
+    LaunchedEffect(initialRoute) {
+        if (initialRoute != "main" && initialRoute != startDestination) {
+            navController.navigate(initialRoute) {
                 popUpTo("main") { inclusive = false }
             }
             prefsManager.clearLastScreen()
@@ -79,25 +84,76 @@ fun AppNavigation() {
 
     NavHost(
         navController = navController,
-        startDestination = "main"
+        startDestination = if (startDestination != "main") startDestination else "main"
     ) {
-        // Ana Ekran
+        // --- DASHBOARD ---
         composable("main") {
-            MainScreen(
-                onNavigateToHabits = { navController.navigate("habits") },
-                onNavigateToWater = { navController.navigate("water") },
-                onNavigateToFinance = { navController.navigate("finance") },
-                onNavigateToNotes = { navController.navigate("notes") },
-                onNavigateToPomodoro = { navController.navigate("pomodoro") },
-                onNavigateToSettings = { navController.navigate("settings") }
+            DashboardScreen(
+                onNavigate = { source, id ->
+                    when (source) {
+                        HabitSource.WATER -> navController.navigate("water")
+                        HabitSource.POMODORO -> navController.navigate("pomodoro")
+                        HabitSource.FINANCE -> navController.navigate("finance")
+                        HabitSource.NOTES -> navController.navigate("notes") // Şimdilik direkt Notes'a
+
+                        HabitSource.SETTINGS -> navController.navigate("settings")
+
+                        HabitSource.HABIT -> {
+                            // 🔥 ARTIK DİREKT DETAY SAYFASINA GİDİYOR
+                            if (id != null) {
+                                navController.navigate("habit_detail/$id")
+                            }
+                        }
+
+                        HabitSource.MEDICINE -> navController.navigate("medicine")
+                    }
+                }
             )
         }
 
-        // Modül Ekranları
-        composable("habits") {
-            HabitsScreen( // 🔥 DÜZELTİLDİ: HabitScreen → HabitsScreen
-                onNavigateBack = { navController.popBackStack() }
+        // --- 🔥 DETAY SAYFASI (YENİ) ---
+        composable(
+            route = "habit_detail/{habitId}",
+            arguments = listOf(navArgument("habitId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val habitId = backStackEntry.arguments?.getLong("habitId") ?: 0L
+            HabitDetailScreen(
+                habitId = habitId,
+                onBack = { navController.popBackStack() }
             )
+        }
+
+        // --- KATEGORİ EKRANLARI ---
+        composable(
+            route = "category_habits/{category}",
+            arguments = listOf(navArgument("category") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val category = backStackEntry.arguments?.getString("category") ?: "OTHER"
+            CategoryHabitScreen(
+                category = category,
+                onBack = { navController.popBackStack() },
+                onAddHabit = { cat -> navController.navigate("add_habit/$cat") }
+            )
+        }
+
+        // --- EKLEME EKRANI ---
+        composable(
+            route = "add_habit/{category}",
+            arguments = listOf(navArgument("category") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val category = backStackEntry.arguments?.getString("category") ?: "OTHER"
+            AddHabitScreen(
+                initialCategory = category,
+                onBack = { navController.popBackStack() },
+                onSave = { navController.popBackStack() }
+            )
+        }
+
+        // --- DİĞER MODÜLLER ---
+
+        composable("habits") {
+            // Eski rota (yedek)
+            HabitScreen(onNavigateToDetail = { id -> navController.navigate("habit_detail/$id") })
         }
 
         composable("water") {
@@ -105,81 +161,36 @@ fun AppNavigation() {
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToSettings = { navController.navigate("settings") },
                 onNavigateToHistory = { navController.navigate("water_history") },
-                onNavigateToReminderSettings = { navController.navigate("water_reminder_settings") } // 🔥 YENİ
+                onNavigateToReminderSettings = { navController.navigate("water_reminder_settings") }
             )
         }
 
-        // 🔥 YENİ: Water History Screen
         composable("water_history") {
-            WaterHistoryScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
+            WaterHistoryScreen(onNavigateBack = { navController.popBackStack() })
         }
 
-        // 🔥 YENİ: Water Reminder Settings Screen
         composable("water_reminder_settings") {
-            WaterReminderSettingsScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
+            WaterReminderSettingsScreen(onNavigateBack = { navController.popBackStack() })
         }
 
         composable("finance") {
-            FinanceScreen(
-                onBack = { navController.popBackStack() }
-            )
+            FinanceScreen(onBack = { navController.popBackStack() })
         }
 
         composable("notes") {
-            NotesScreen(
-                onBack = { navController.popBackStack() }
-            )
+            NotesScreen(onBack = { navController.popBackStack() })
         }
 
         composable("pomodoro") {
-            PomodoroScreen(
-                onBack = { navController.popBackStack() }
-            )
+            PomodoroScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("medicine") {
+            Surface { Text("İlaç Ekranı Yakında...") }
         }
 
         composable("settings") {
-            SettingsScreen(
-                onBack = { navController.popBackStack() }
-            )
+            SettingsScreen(onBack = { navController.popBackStack() })
         }
-    }
-}
-
-// 🔥 EKSİK COMPOSABLE FONKSİYONLARI EKLENDİ
-
-@Composable
-fun HabitsScreen(onNavigateBack: () -> Unit) {
-    // Basit bir placeholder - gerçek implementasyon için HabitsScreen.kt gerekli
-    WaterTrackerScreen(
-        onNavigateBack = onNavigateBack,
-        onNavigateToSettings = {},
-        onNavigateToHistory = {},
-        onNavigateToReminderSettings = {}
-    )
-}
-
-
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    MainScreen(
-        onNavigateToHabits = { },
-        onNavigateToWater = { },
-        onNavigateToFinance = { },
-        onNavigateToNotes = { },
-        onNavigateToPomodoro = { },
-        onNavigateToSettings = { }
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ModaiTheme {
-        Greeting("MODAI")
     }
 }

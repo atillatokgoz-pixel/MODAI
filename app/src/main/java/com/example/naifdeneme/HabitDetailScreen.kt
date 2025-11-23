@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.naifdeneme.database.AppDatabase
 import com.example.naifdeneme.database.HabitEntity
+import com.example.naifdeneme.database.HabitType
 import kotlinx.coroutines.launch
 
 @Composable
@@ -90,9 +91,33 @@ fun HabitDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // 🔥 YENİ: İLERLEME KARTI (Hedefli veya Süreli ise göster)
+            if (currentHabit.type != HabitType.SIMPLE) {
+                ProgressEntryCard(
+                    current = currentHabit.currentProgress,
+                    target = currentHabit.targetValue,
+                    unit = currentHabit.unit,
+                    onUpdate = { newProgress ->
+                        scope.launch {
+                            // Veritabanını güncelle
+                            database.habitDao().updateProgress(habitId, newProgress)
+                            // Ekranı güncelle
+                            habit = habit?.copy(currentProgress = newProgress)
+
+                            // Hedefe ulaşıldıysa otomatik tamamla
+                            if (newProgress >= currentHabit.targetValue && !currentHabit.isCompletedToday()) {
+                                database.habitDao().completeHabit(habitId)
+                                habit = database.habitDao().getHabitById(habitId)
+                            }
+                        }
+                    }
+                )
+            }
+
             StreakCard(habit = currentHabit)
             StatisticsCard(habit = currentHabit)
             CalendarCard(habit = currentHabit)
+
             ReminderCard(
                 habit = currentHabit,
                 onReminderToggle = { enabled ->
@@ -117,6 +142,7 @@ fun HabitDetailScreen(
                 onTimeClick = { showReminderDialog = true },
                 onDaysClick = { showDaysDialog = true }
             )
+
             ActionButtons(
                 habit = currentHabit,
                 onComplete = {
@@ -196,6 +222,67 @@ fun HabitDetailScreen(
     }
 }
 
+// 🔥 YENİ KART: İLERLEME GİRİŞİ
+@Composable
+fun ProgressEntryCard(
+    current: Int,
+    target: Int,
+    unit: String,
+    onUpdate: (Int) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Bugünkü İlerleme", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // AZALT BUTONU
+                FilledTonalIconButton(
+                    onClick = { if (current > 0) onUpdate(current - 1) },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.Default.Remove, "Azalt")
+                }
+
+                // ORTA BİLGİ
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "$current / $target",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(unit, style = MaterialTheme.typography.bodyMedium)
+                }
+
+                // ARTIR BUTONU
+                FilledTonalIconButton(
+                    onClick = { onUpdate(current + 1) },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.Default.Add, "Artır")
+                }
+            }
+
+            // Progress Bar
+            Spacer(Modifier.height(16.dp))
+            LinearProgressIndicator(
+                progress = (current.toFloat() / target).coerceIn(0f, 1f),
+                modifier = Modifier.fillMaxWidth().height(8.dp).clip(CircleShape)
+            )
+        }
+    }
+}
+
 @Composable
 fun StreakCard(habit: HabitEntity) {
     Card(
@@ -230,32 +317,6 @@ fun StreakCard(habit: HabitEntity) {
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
             }
-
-            Spacer(Modifier.height(12.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    "💪 Güç:",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                LinearProgressIndicator(
-                    progress = habit.strengthScore,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(8.dp)
-                        .clip(MaterialTheme.shapes.small),
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    "${(habit.strengthScore * 100).toInt()}%",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
         }
     }
 }
@@ -288,11 +349,6 @@ fun StatisticsCard(habit: HabitEntity) {
                     label = "Toplam Tamamlama",
                     value = "${habit.totalCompletions}",
                     icon = "🎯"
-                )
-                StatItem(
-                    label = "En Uzun Streak",
-                    value = "${habit.longestStreak}",
-                    icon = "🏆"
                 )
             }
         }
@@ -357,31 +413,6 @@ fun CalendarCard(habit: HabitEntity) {
                             )
                     )
                 }
-            }
-
-            Spacer(Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    Modifier
-                        .size(12.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                )
-                Spacer(Modifier.width(4.dp))
-                Text("Tamamlandı", fontSize = 12.sp)
-                Spacer(Modifier.width(16.dp))
-                Box(
-                    Modifier
-                        .size(12.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                )
-                Spacer(Modifier.width(4.dp))
-                Text("Eksik", fontSize = 12.sp)
             }
         }
     }
@@ -561,71 +592,71 @@ fun getDaysText(days: String): String {
 }
 
 @Composable
-    fun TimePickerDialog(
-        initialHour: Int,
-        initialMinute: Int,
-        onDismiss: () -> Unit,
-        onConfirm: (Int, Int) -> Unit
-    ) {
-        var selectedHour by remember { mutableStateOf(initialHour) }
-        var selectedMinute by remember { mutableStateOf(initialMinute) }
+fun TimePickerDialog(
+    initialHour: Int,
+    initialMinute: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int, Int) -> Unit
+) {
+    var selectedHour by remember { mutableStateOf(initialHour) }
+    var selectedMinute by remember { mutableStateOf(initialMinute) }
 
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text("Hatırlatma Saati") },
-            text = {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Hatırlatma Saati") },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text("⏰", fontSize = 24.sp)
-                        Text(
-                            String.format("%02d:%02d", selectedHour, selectedMinute),
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Text("⏰", fontSize = 24.sp)
+                    Text(
+                        String.format("%02d:%02d", selectedHour, selectedMinute),
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-                    Column {
-                        Text("Saat", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            IconButton(onClick = { if (selectedHour > 0) selectedHour-- else selectedHour = 23 }) {
-                                Icon(Icons.Default.KeyboardArrowDown, null)
-                            }
-                            Text(String.format("%02d", selectedHour), fontSize = 24.sp, modifier = Modifier.width(48.dp))
-                            IconButton(onClick = { if (selectedHour < 23) selectedHour++ else selectedHour = 0 }) {
-                                Icon(Icons.Default.KeyboardArrowUp, null)
-                            }
+                Column {
+                    Text("Saat", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(onClick = { if (selectedHour > 0) selectedHour-- else selectedHour = 23 }) {
+                            Icon(Icons.Default.KeyboardArrowDown, null)
                         }
-                    }
-
-                    Column {
-                        Text("Dakika", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            IconButton(onClick = { if (selectedMinute > 0) selectedMinute-- else selectedMinute = 59 }) {
-                                Icon(Icons.Default.KeyboardArrowDown, null)
-                            }
-                            Text(String.format("%02d", selectedMinute), fontSize = 24.sp, modifier = Modifier.width(48.dp))
-                            IconButton(onClick = { if (selectedMinute < 59) selectedMinute++ else selectedMinute = 0 }) {
-                                Icon(Icons.Default.KeyboardArrowUp, null)
-                            }
+                        Text(String.format("%02d", selectedHour), fontSize = 24.sp, modifier = Modifier.width(48.dp))
+                        IconButton(onClick = { if (selectedHour < 23) selectedHour++ else selectedHour = 0 }) {
+                            Icon(Icons.Default.KeyboardArrowUp, null)
                         }
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { onConfirm(selectedHour, selectedMinute) }) {
-                    Text("Tamam")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text("İptal")
+
+                Column {
+                    Text("Dakika", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(onClick = { if (selectedMinute > 0) selectedMinute-- else selectedMinute = 59 }) {
+                            Icon(Icons.Default.KeyboardArrowDown, null)
+                        }
+                        Text(String.format("%02d", selectedMinute), fontSize = 24.sp, modifier = Modifier.width(48.dp))
+                        IconButton(onClick = { if (selectedMinute < 59) selectedMinute++ else selectedMinute = 0 }) {
+                            Icon(Icons.Default.KeyboardArrowUp, null)
+                        }
+                    }
                 }
             }
-        )
-    }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(selectedHour, selectedMinute) }) {
+                Text("Tamam")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("İptal")
+            }
+        }
+    )
+}

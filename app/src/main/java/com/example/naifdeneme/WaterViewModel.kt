@@ -3,6 +3,7 @@ package com.example.naifdeneme
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.naifdeneme.database.DrinkType
 import com.example.naifdeneme.database.WaterDao
 import com.example.naifdeneme.database.WaterEntryEntity
 import kotlinx.coroutines.flow.*
@@ -11,11 +12,25 @@ import java.util.*
 
 /**
  * Water Tracker ViewModel
+ * Version 3: Auto-refresh on date change
  */
 class WaterViewModel(
     private val waterDao: WaterDao,
     private val preferencesManager: PreferencesManager
 ) : ViewModel() {
+
+    // ============================================
+    // UI STATE
+    // ============================================
+
+    private val _uiState = MutableStateFlow<WaterUiState>(WaterUiState.Success)
+    val uiState: StateFlow<WaterUiState> = _uiState.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    // Tarih değişikliğini tetiklemek için
+    private val _refreshTrigger = MutableStateFlow(System.currentTimeMillis())
 
     // ============================================
     // STATE FLOWS
@@ -28,14 +43,17 @@ class WaterViewModel(
             initialValue = 2500
         )
 
-    val todayEntries: StateFlow<List<WaterEntryEntity>> = flow {
-        val (startOfDay, endOfDay) = getTodayTimestamps()
-        waterDao.getTodayEntries(startOfDay, endOfDay).collect { emit(it) }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    // 🔥 GÜNCELLENDİ: refreshTrigger ile yeniden sorgu yapar
+    val todayEntries: StateFlow<List<WaterEntryEntity>> = _refreshTrigger
+        .flatMapLatest {
+            val (startOfDay, endOfDay) = getTodayTimestamps()
+            waterDao.getTodayEntries(startOfDay, endOfDay)
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     val reminderEnabled: StateFlow<Boolean> = preferencesManager.waterReminderEnabled
         .stateIn(
@@ -69,59 +87,68 @@ class WaterViewModel(
             initialValue = false
         )
 
-    val weeklyStats: StateFlow<List<DailyWaterStat>> = flow {
-        val stats = mutableListOf<DailyWaterStat>()
-        val calendar = Calendar.getInstance()
-
-        repeat(7) { daysAgo ->
-            calendar.time = Date()
-            calendar.add(Calendar.DAY_OF_YEAR, -daysAgo)
-
-            val (startOfDay, endOfDay) = getTimestampsForDate(calendar.time)
-            val entries = waterDao.getTodayEntries(startOfDay, endOfDay).first()
-            val total = entries.sumOf { it.amount }
-
-            stats.add(0, DailyWaterStat(
-                date = calendar.time,
-                amount = total,
-                dayName = getDayName(calendar.get(Calendar.DAY_OF_WEEK))
-            ))
+    val weeklyStats: StateFlow<List<DailyWaterStat>> = _refreshTrigger
+        .flatMapLatest {
+            flow { emit(calculateWeeklyStats()) }
         }
-
-        emit(stats)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     // ============================================
     // ACTIONS
     // ============================================
 
     /**
-     * 🔥 YENİ: Hatırlatıcı aç/kapa
+     * Tarih değiştiğinde çağırılmalı
      */
-    fun updateReminderEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            preferencesManager.setWaterReminderEnabled(enabled)
-        }
+    fun refreshDate() {
+        _refreshTrigger.value = System.currentTimeMillis()
     }
 
-    fun addWater(amount: Int, note: String? = null) {
+    fun addWater(
+        amount: Int,
+        drinkType: DrinkType = DrinkType.WATER,
+        note: String? = null
+    ) {
         viewModelScope.launch {
-            val entry = WaterEntryEntity(
-                amount = amount,
-                timestamp = System.currentTimeMillis(),
-                note = note
-            )
-            waterDao.insertEntry(entry)
+            try {
+                if (!validateAmount(amount)) return@launch
+
+                _uiState.value = WaterUiState.Loading
+
+                val entry = WaterEntryEntity(
+                    amount = amount,
+                    drinkType = drinkType.id,
+                    drinkIcon = drinkType.emoji,
+                    timestamp = System.currentTimeMillis(),
+                    note = note?.trim()?.takeIf { it.isNotEmpty() }
+                )
+
+                waterDao.insertEntry(entry)
+                _uiState.value = WaterUiState.Success
+                clearError()
+
+            } catch (e: Exception) {
+                android.util.Log.e("WaterViewModel", "Error adding water", e)
+                _uiState.value = WaterUiState.Error("Su eklenirken hata oluştu")
+                _errorMessage.value = "Hata: ${e.localizedMessage}"
+            }
         }
     }
 
     fun deleteEntry(entryId: String) {
         viewModelScope.launch {
-            waterDao.deleteEntry(entryId)
+            try {
+                _uiState.value = WaterUiState.Loading
+                waterDao.deleteEntry(entryId)
+                _uiState.value = WaterUiState.Success
+                clearError()
+            } catch (e: Exception) {
+                _uiState.value = WaterUiState.Error("Kayıt silinirken hata oluştu")
+            }
         }
     }
 
@@ -131,14 +158,31 @@ class WaterViewModel(
         }
     }
 
-    fun quickAddWater(amount: Int) {
-        addWater(amount)
+    fun updateReminderEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesManager.setWaterReminderEnabled(enabled)
+        }
     }
 
-    fun undoLastEntry() {
-        viewModelScope.launch {
-            val lastEntry = todayEntries.value.firstOrNull()
-            lastEntry?.let { deleteEntry(it.id) }
+    fun clearError() {
+        _errorMessage.value = null
+    }
+
+    // ============================================
+    // VALIDATION
+    // ============================================
+
+    private fun validateAmount(amount: Int): Boolean {
+        return when {
+            amount <= 0 -> {
+                _errorMessage.value = "Miktar 0'dan büyük olmalı"
+                false
+            }
+            amount > 5000 -> {
+                _errorMessage.value = "Çok fazla! Maksimum 5000ml"
+                false
+            }
+            else -> true
         }
     }
 
@@ -181,6 +225,28 @@ class WaterViewModel(
         return startOfDay to endOfDay
     }
 
+    private suspend fun calculateWeeklyStats(): List<DailyWaterStat> {
+        val stats = mutableListOf<DailyWaterStat>()
+        val calendar = Calendar.getInstance()
+
+        repeat(7) { daysAgo ->
+            calendar.time = Date()
+            calendar.add(Calendar.DAY_OF_YEAR, -daysAgo)
+
+            val (startOfDay, endOfDay) = getTimestampsForDate(calendar.time)
+            val entries = waterDao.getTodayEntries(startOfDay, endOfDay).first()
+            val total = entries.sumOf { it.amount }
+
+            stats.add(0, DailyWaterStat(
+                date = calendar.time,
+                amount = total,
+                dayName = getDayName(calendar.get(Calendar.DAY_OF_WEEK))
+            ))
+        }
+
+        return stats
+    }
+
     private fun getDayName(dayOfWeek: Int): String {
         return when (dayOfWeek) {
             Calendar.MONDAY -> "Pzt"
@@ -193,6 +259,15 @@ class WaterViewModel(
             else -> ""
         }
     }
+}
+
+/**
+ * UI State
+ */
+sealed class WaterUiState {
+    object Success : WaterUiState()
+    object Loading : WaterUiState()
+    data class Error(val message: String) : WaterUiState()
 }
 
 /**
