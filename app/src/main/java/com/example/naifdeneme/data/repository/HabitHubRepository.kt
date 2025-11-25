@@ -1,7 +1,6 @@
 package com.example.naifdeneme.data.repository
 
 import android.content.Context
-import android.graphics.Color
 import com.example.naifdeneme.R
 import com.example.naifdeneme.database.HabitDao
 import com.example.naifdeneme.database.MedicineDao
@@ -31,11 +30,11 @@ class HabitHubRepository(
             waterDao.getTodayTotalAmount(startOfDay, endOfDay),
             medicineDao.getAllMedicines(),
             pomodoroDao.getTodayWorkSessionCount(startOfDay, endOfDay)
-        ) { habits, waterTotalAmount, medicines, pomodoroCount ->
+        ) { habitList, waterTotalAmount, medicinesList, pomodoroCount ->
 
             val unifiedList = mutableListOf<UnifiedHabit>()
 
-            // --- 1. SU MODÜLÜ ---
+            // --- 1. SU ---
             val waterTarget = 3000
             val currentWater = waterTotalAmount ?: 0
             val waterProgress = (currentWater.toFloat() / waterTarget).coerceIn(0f, 1f)
@@ -43,8 +42,8 @@ class HabitHubRepository(
             unifiedList.add(
                 UnifiedHabit(
                     id = "water_main",
-                    title = "Water", // Yedek (Görünmeyecek)
-                    titleRes = R.string.water_tracker_title, // 🔥 ID GÖNDERİYORUZ
+                    title = "Water",
+                    titleRes = R.string.water_tracker_title,
                     subtitle = "$currentWater / $waterTarget ml",
                     icon = "💧",
                     color = 0xFF2196F3,
@@ -52,7 +51,13 @@ class HabitHubRepository(
                     isCompleted = currentWater >= waterTarget,
                     source = HabitSource.WATER,
                     actionLabel = "+200ml",
-                    actionLabelRes = R.string.btn_quick_add_water // 🔥 ID GÖNDERİYORUZ
+                    actionLabelRes = R.string.btn_quick_add_water,
+
+                    // yeni alanlar
+                    category = "HEALTH",
+                    targetValue = waterTarget,
+                    currentValue = currentWater,
+                    unit = "ml"
                 )
             )
 
@@ -61,63 +66,70 @@ class HabitHubRepository(
             val pomodoroTarget = 4
             val pomodoroProgress = (currentPomodoro.toFloat() / pomodoroTarget).coerceIn(0f, 1f)
 
-            // Alt metin dinamik olduğu için context kullanmak zorundayız ama title sabit
-            val pomodoroSubtitle = if(currentPomodoro > 0) "$currentPomodoro / $pomodoroTarget"
-            else context.getString(R.string.status_focus_time)
-
             unifiedList.add(
                 UnifiedHabit(
                     id = "pomodoro_main",
                     title = "Pomodoro",
-                    titleRes = R.string.pomodoro_title, // 🔥 ID GÖNDERİYORUZ
-                    subtitle = pomodoroSubtitle,
+                    titleRes = R.string.pomodoro_title,
+                    subtitle = if (currentPomodoro > 0) "$currentPomodoro / $pomodoroTarget"
+                    else context.getString(R.string.status_focus_time),
                     icon = "🍅",
                     color = 0xFFF44336,
                     progress = pomodoroProgress,
                     isCompleted = currentPomodoro >= pomodoroTarget,
                     source = HabitSource.POMODORO,
                     actionLabel = "Start",
-                    actionLabelRes = R.string.pomodoro_start // 🔥 ID GÖNDERİYORUZ
+                    actionLabelRes = R.string.pomodoro_start,
+
+                    category = "WORK",
+                    targetValue = pomodoroTarget,
+                    currentValue = currentPomodoro,
+                    unit = "set"
                 )
             )
 
             // --- 3. İLAÇLAR ---
-            // İlaç isimleri veritabanından gelir (Kullanıcı yazar), o yüzden çevrilemez.
-            medicines.forEach { medicine ->
+            medicinesList.forEach { medicine ->
                 unifiedList.add(
                     UnifiedHabit(
                         id = "medicine_${medicine.id}",
-                        title = medicine.name, // Kullanıcı girdisi
+                        title = medicine.name,
                         subtitle = "${medicine.dosage} ${context.getString(R.string.unit_dose)}",
                         icon = "💊",
                         color = 0xFF9C27B0,
                         progress = 0f,
                         isCompleted = false,
                         source = HabitSource.MEDICINE,
-                        originalId = null
+
+                        category = "HEALTH",
+                        unit = "dose"
                     )
                 )
             }
 
-            // --- 4. GENEL ALIŞKANLIKLAR ---
-            // Alışkanlık isimleri veritabanından gelir.
-            habits.forEach { habit ->
+            // --- 4. NORMAL ALIŞKANLIKLAR ---
+            habitList.forEach { habit ->
                 val isDone = habit.isCompletedToday()
-                // Durum mesajını dinamik alıyoruz
-                val statusMsg = if (isDone) context.getString(R.string.status_completed)
-                else context.getString(R.string.status_waiting)
 
                 unifiedList.add(
                     UnifiedHabit(
                         id = "habit_${habit.id}",
                         title = habit.name,
-                        subtitle = statusMsg,
+                        subtitle = if (isDone)
+                            context.getString(R.string.status_completed)
+                        else
+                            context.getString(R.string.status_waiting),
                         icon = habit.icon,
-                        color = parseColorSafe(habit.color),
+                        color = habit.color,
                         progress = if (isDone) 1f else 0f,
                         isCompleted = isDone,
                         source = HabitSource.HABIT,
-                        originalId = habit.id
+                        originalId = habit.id,
+
+                        category = habit.category,
+                        targetValue = habit.targetValue,
+                        currentValue = if (isDone) habit.targetValue else 0,
+                        unit = habit.unit
                     )
                 )
             }
@@ -127,48 +139,35 @@ class HabitHubRepository(
     }
 
     suspend fun addQuickWater(amount: Int) {
-        val newEntry = WaterEntryEntity(
-            id = UUID.randomUUID().toString(),
-            amount = amount,
-            timestamp = System.currentTimeMillis(),
-            drinkType = "water"
+        waterDao.insertEntry(
+            WaterEntryEntity(
+                id = UUID.randomUUID().toString(),
+                amount = amount,
+                timestamp = System.currentTimeMillis(),
+                drinkType = "water"
+            )
         )
-        waterDao.insertEntry(newEntry)
     }
 
     private fun getTodayTimeRange(): Pair<Long, Long> {
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        val startOfDay = calendar.timeInMillis
+        val c = Calendar.getInstance()
+        c.set(Calendar.HOUR_OF_DAY, 0)
+        c.set(Calendar.MINUTE, 0)
+        c.set(Calendar.SECOND, 0)
+        c.set(Calendar.MILLISECOND, 0)
+        val start = c.timeInMillis
 
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59)
-        calendar.set(Calendar.MILLISECOND, 999)
-        val endOfDay = calendar.timeInMillis
+        c.set(Calendar.HOUR_OF_DAY, 23)
+        c.set(Calendar.MINUTE, 59)
+        c.set(Calendar.SECOND, 59)
+        c.set(Calendar.MILLISECOND, 999)
+        val end = c.timeInMillis
 
-        return Pair(startOfDay, endOfDay)
+        return start to end
     }
 
-    private fun parseColorSafe(colorString: String): Long {
-        return try {
-            Color.parseColor(colorString).toLong()
-        } catch (e: Exception) {
-            0xFFFFA726
-        }
-    }
-
-    /**
-     * Alışkanlık tamamlandıysa geri al, tamamlanmadıysa tamamla.
-     */
-    suspend fun toggleHabitCompletion(habitId: Long, isCurrentlyCompleted: Boolean) {
-        if (isCurrentlyCompleted) {
-            habitDao.uncompleteHabit(habitId)
-        } else {
-            habitDao.completeHabit(habitId)
-        }
+    suspend fun toggleHabitCompletion(habitId: Long, status: Boolean) {
+        if (status) habitDao.uncompleteHabit(habitId)
+        else habitDao.completeHabit(habitId)
     }
 }

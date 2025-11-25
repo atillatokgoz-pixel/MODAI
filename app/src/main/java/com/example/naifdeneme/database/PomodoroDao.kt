@@ -3,9 +3,6 @@ package com.example.naifdeneme.database
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Pomodoro Data Access Object
- */
 @Dao
 interface PomodoroDao {
 
@@ -19,7 +16,7 @@ interface PomodoroDao {
     fun getTodaySessions(startOfDay: Long, endOfDay: Long): Flow<List<PomodoroEntity>>
 
     @Query("SELECT COUNT(*) FROM pomodoro_sessions WHERE type = 'WORK' AND completed = 1 AND date >= :startOfDay AND date <= :endOfDay")
-    fun getTodayWorkSessionCount(startOfDay: Long, endOfDay: Long): Flow<Int>
+    fun getTodayWorkSessionCount(startOfDay: Long, endOfDay: Long): Flow<Int?>   // ✔ NULLABLE OLDU
 
     @Query("DELETE FROM pomodoro_sessions WHERE id = :id")
     suspend fun deleteSession(id: Int)

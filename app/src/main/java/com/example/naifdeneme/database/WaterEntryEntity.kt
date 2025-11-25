@@ -3,10 +3,13 @@ package com.example.naifdeneme.database
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.UUID
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Su İçme Kaydı Entity
- * Version 2: drinkType ve drinkIcon eklendi
+ * Version 3: 'date' sütunu eklendi (Hub sorguları için)
  */
 @Entity(tableName = "water_entries")
 data class WaterEntryEntity(
@@ -15,11 +18,14 @@ data class WaterEntryEntity(
 
     val amount: Int, // ml cinsinden
 
-    val drinkType: String = "water", // water, tea, coffee, juice, milk, other
+    val drinkType: String = "water", // water, tea, coffee...
 
-    val drinkIcon: String? = null, // Emoji veya icon resource name (opsiyonel)
+    val drinkIcon: String? = null, // Emoji
 
     val timestamp: Long = System.currentTimeMillis(),
+
+    // 🔥 EKLENEN YENİ ALAN: Tarih stringi (örn: "2023-11-25")
+    val date: String = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
 
     val note: String? = null
 )

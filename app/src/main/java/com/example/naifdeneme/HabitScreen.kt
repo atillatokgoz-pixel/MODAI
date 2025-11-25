@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import com.example.naifdeneme.database.AppDatabase
 import com.example.naifdeneme.database.HabitEntity
 import kotlinx.coroutines.launch
-import java.util.Calendar
 
 @Composable
 fun HabitScreen(onNavigateToDetail: (Long) -> Unit) {
@@ -55,10 +54,7 @@ fun HabitScreen(onNavigateToDetail: (Long) -> Unit) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("💪", fontSize = 64.sp)
                     Spacer(Modifier.height(16.dp))
-                    Text(
-                        "Henüz alışkanlık yok",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Text("Henüz alışkanlık yok", style = MaterialTheme.typography.bodyLarge)
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = { showAddDialog = true }) {
                         Text("Alışkanlık Ekle")
@@ -73,51 +69,21 @@ fun HabitScreen(onNavigateToDetail: (Long) -> Unit) {
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(
-                    items = habits,
-                    key = { habit -> habit.id }
-                ) { habit ->
+                items(habits, key = { it.id }) { habit ->
                     HabitCard(
                         habit = habit,
                         onComplete = {
                             scope.launch {
-                                val today = HabitEntity.getTodayDateString()
                                 if (habit.isCompletedToday()) {
-                                    // Bugün zaten tamamlanmış, kaldır
-                                    val updatedCompletionDates = habit.completionDates
-                                        .split(",")
-                                        .filter { it != today }
-                                        .joinToString(",")
-
-                                    database.habitDao().updateHabit(
-                                        habit.copy(
-                                            lastCompletedDate = null,
-                                            totalCompletions = maxOf(0, habit.totalCompletions - 1),
-                                            completionDates = updatedCompletionDates
-                                        )
-                                    )
+                                    // 🔁 Artık DAO fonksiyonu ile geri alıyoruz
+                                    database.habitDao().uncompleteHabit(habit.id)
                                 } else {
-                                    // Bugün tamamla
-                                    val updatedCompletionDates = if (habit.completionDates.isBlank()) {
-                                        today
-                                    } else {
-                                        "$today,${habit.completionDates}"
-                                    }
-
-                                    database.habitDao().updateHabit(
-                                        habit.copy(
-                                            lastCompletedDate = today,
-                                            totalCompletions = habit.totalCompletions + 1,
-                                            completionDates = updatedCompletionDates
-                                        )
-                                    )
+                                    database.habitDao().completeHabit(habit.id)
                                 }
                             }
                         },
                         onDelete = { habitToDelete = habit },
-                        onClick = {
-                            onNavigateToDetail(habit.id)
-                        }
+                        onClick = { onNavigateToDetail(habit.id) }
                     )
                 }
             }
@@ -133,7 +99,7 @@ fun HabitScreen(onNavigateToDetail: (Long) -> Unit) {
                         HabitEntity(
                             name = name,
                             icon = "💪",
-                            color = "#FF6B6B"
+                            color = 0xFFFF6B6B
                         )
                     )
                 }
@@ -151,19 +117,13 @@ fun HabitScreen(onNavigateToDetail: (Long) -> Unit) {
             confirmButton = {
                 TextButton(
                     onClick = {
-                        scope.launch {
-                            database.habitDao().deleteHabit(habit)
-                        }
+                        scope.launch { database.habitDao().deleteHabit(habit) }
                         habitToDelete = null
                     }
-                ) {
-                    Text("Sil", color = MaterialTheme.colorScheme.error)
-                }
+                ) { Text("Sil", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { habitToDelete = null }) {
-                    Text("İptal")
-                }
+                TextButton(onClick = { habitToDelete = null }) { Text("İptal") }
             }
         )
     }
@@ -177,6 +137,7 @@ fun HabitCard(
     onClick: () -> Unit
 ) {
     val isCompletedToday = habit.isCompletedToday()
+    val completionRate = habit.getCompletionRate().coerceIn(0, 100)
 
     Card(
         modifier = Modifier
@@ -193,6 +154,8 @@ fun HabitCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+
+            // SOL TARAF: İKON + İSİM + BUGÜNKÜ DURUM
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
@@ -220,7 +183,7 @@ fun HabitCard(
 
                         if (habit.reminderEnabled) {
                             Text(
-                                "🔔 ${String.format("%02d:%02d", habit.reminderHour, habit.reminderMinute)}",
+                                "🔔 %02d:%02d".format(habit.reminderHour, habit.reminderMinute),
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.secondary
                             )
@@ -229,36 +192,62 @@ fun HabitCard(
                         Text(
                             if (isCompletedToday) "✅ Bugün tamamlandı" else "⏳ Tamamlanmadı",
                             fontSize = 12.sp,
-                            color = if (isCompletedToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isCompletedToday)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // SAĞ TARAF: TAMAMLAMA ORANI + BUTONLAR
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                IconButton(onClick = onComplete) {
-                    Icon(
-                        imageVector = if (isCompletedToday)
-                            Icons.Default.CheckCircle
-                        else
-                            Icons.Default.Check,
-                        contentDescription = null,
-                        tint = if (isCompletedToday)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                // Tamamlama oranı
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (completionRate >= 100) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Tamamlandı",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        Text(
+                            "$completionRate%",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
 
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Sil",
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onComplete) {
+                        Icon(
+                            imageVector = if (isCompletedToday)
+                                Icons.Default.CheckCircle
+                            else
+                                Icons.Default.Check,
+                            contentDescription = null,
+                            tint = if (isCompletedToday)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Sil",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }

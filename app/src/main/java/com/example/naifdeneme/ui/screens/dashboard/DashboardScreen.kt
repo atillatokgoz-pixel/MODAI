@@ -1,5 +1,6 @@
 package com.example.naifdeneme.ui.screens.dashboard
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,10 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,15 +32,16 @@ import com.example.naifdeneme.domain.model.UnifiedHabit
 
 @Composable
 fun DashboardScreen(
-    onNavigate: (HabitSource, Long?) -> Unit
+    // MainActivity'deki navigasyon yapısıyla uyumlu parametreler
+    onNavigate: (HabitSource, Long?, String?) -> Unit
 ) {
     val context = LocalContext.current
 
-    // 🔥 Kullanıcı Adı
     val prefsManager = remember { PreferencesManager.getInstance(context) }
-    val userName by prefsManager.userName.collectAsState(initial = stringResource(R.string.default_user_name))
+    val userName by prefsManager.userName.collectAsState(
+        initial = stringResource(R.string.default_user_name)
+    )
 
-    // Repository
     val database = AppDatabase.getDatabase(context)
     val repository = HabitHubRepository(
         context.applicationContext,
@@ -65,7 +64,6 @@ fun DashboardScreen(
     Scaffold(
         topBar = { DashboardTopBar(userName) },
         bottomBar = { DashboardBottomBar(onNavigate) },
-        // 🔥 Koyu Tema Arka Planı
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
@@ -75,9 +73,9 @@ fun DashboardScreen(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // --- 1. HEADER ---
+
             item {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.dashboard_greeting, userName),
                     style = MaterialTheme.typography.headlineMedium,
@@ -92,7 +90,6 @@ fun DashboardScreen(
                 )
             }
 
-            // --- 2. BAŞLIK ---
             item {
                 Text(
                     text = stringResource(R.string.dashboard_tasks_title),
@@ -103,18 +100,16 @@ fun DashboardScreen(
                 )
             }
 
-            // --- 3. KARTLAR ---
             items(habits) { habit ->
                 UnifiedHabitCard(
                     habit = habit,
-                    onClick = { onNavigate(habit.source, habit.originalId) },
+                    onClick = { onNavigate(habit.source, habit.originalId, habit.category) },
                     onQuickAction = { viewModel.onQuickAction(habit) }
                 )
             }
 
-            // --- 4. GRID BAŞLIĞI ---
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.grid_title),
                     style = MaterialTheme.typography.titleLarge,
@@ -124,12 +119,11 @@ fun DashboardScreen(
                 )
             }
 
-            // --- 5. GRID ---
             item {
-                OverallStatusGrid(onNavigate)
+                OverallStatusGrid(habits, onNavigate)
             }
 
-            item { Spacer(modifier = Modifier.height(24.dp)) }
+            item { Spacer(Modifier.height(24.dp)) }
         }
     }
 }
@@ -140,15 +134,13 @@ fun UnifiedHabitCard(
     onClick: () -> Unit,
     onQuickAction: () -> Unit
 ) {
-    // 🔥 Koyu Tema Kart Renkleri
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -164,22 +156,22 @@ fun UnifiedHabitCard(
                 Text(text = habit.icon, fontSize = 24.sp)
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(Modifier.width(16.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                // 🔥 DİL ÇÖZÜMÜ: Eğer ID varsa onu çevir, yoksa düz yazıyı göster
-                val titleText = if (habit.titleRes != null) stringResource(habit.titleRes!!) else habit.title
+            Column(Modifier.weight(1f)) {
+                val titleText =
+                    if (habit.titleRes != null) stringResource(habit.titleRes!!)
+                    else habit.title
 
                 Text(
                     text = titleText,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontWeight = FontWeight.SemiBold
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(Modifier.height(6.dp))
 
-                if (habit.progress > 0f && habit.progress < 1f && !habit.isCompleted) {
+                if (habit.progress in 0f..0.99f) {
                     LinearProgressIndicator(
                         progress = habit.progress,
                         modifier = Modifier
@@ -199,44 +191,62 @@ fun UnifiedHabitCard(
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(Modifier.width(12.dp))
 
-            if (habit.actionLabel != null && !habit.isCompleted) {
-                // 🔥 DİL ÇÖZÜMÜ: Buton için de aynısı
-                val btnText = if (habit.actionLabelRes != null) stringResource(habit.actionLabelRes!!) else habit.actionLabel
+            when {
+                habit.actionLabel != null && !habit.isCompleted -> {
+                    val btnText =
+                        if (habit.actionLabelRes != null) stringResource(habit.actionLabelRes!!)
+                        else habit.actionLabel
 
-                FilledTonalButton(
-                    onClick = onQuickAction,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                    modifier = Modifier.height(32.dp),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = Color(habit.color).copy(alpha = 0.1f),
-                        contentColor = Color(habit.color)
-                    )
-                ) {
-                    Text(btnText ?: "", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    FilledTonalButton(
+                        onClick = onQuickAction,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                        modifier = Modifier.height(32.dp),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = Color(habit.color).copy(alpha = 0.1f),
+                            contentColor = Color(habit.color)
+                        )
+                    ) {
+                        Text(btnText ?: "", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
-            } else if (habit.isCompleted) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = stringResource(R.string.status_completed),
-                    tint = Color(habit.color),
-                    modifier = Modifier.size(28.dp)
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+
+                habit.isCompleted -> {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(habit.color),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                else -> {
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun OverallStatusGrid(onNavigate: (HabitSource, Long?) -> Unit) {
+fun OverallStatusGrid(
+    habits: List<UnifiedHabit>,
+    onNavigate: (HabitSource, Long?, String?) -> Unit
+) {
+    val progressByCategory = remember(habits) {
+        habits.groupBy { it.category ?: "OTHER" }
+            .mapValues { (_, list) ->
+                list.map { it.progress }.average().toFloat()
+            }
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             StatusCard(
                 modifier = Modifier.weight(1f),
@@ -245,9 +255,11 @@ fun OverallStatusGrid(onNavigate: (HabitSource, Long?) -> Unit) {
                 icon = Icons.Default.Favorite,
                 color = Color(0xFFFFC2D1),
                 iconColor = Color(0xFFD16D86),
-                progress = 0.75f,
-                onClick = { onNavigate(HabitSource.WATER, null) }
+                progress = progressByCategory["HEALTH"] ?: 0f,
+                // 🔥 GÜNCELLENDİ: Direkt Water yerine "HEALTH" Hub'ına gidiyor
+                onClick = { onNavigate(HabitSource.HABIT, null, "HEALTH") }
             )
+
             StatusCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.grid_education),
@@ -255,10 +267,12 @@ fun OverallStatusGrid(onNavigate: (HabitSource, Long?) -> Unit) {
                 icon = Icons.Default.School,
                 color = Color(0xFFA3D5FF),
                 iconColor = Color(0xFF4A8AC1),
-                progress = 0.40f,
-                onClick = { onNavigate(HabitSource.NOTES, null) }
+                progress = progressByCategory["EDUCATION"] ?: 0f,
+                // 🔥 GÜNCELLENDİ: Direkt Notes yerine "EDUCATION" Hub'ına gidiyor
+                onClick = { onNavigate(HabitSource.HABIT, null, "EDUCATION") }
             )
         }
+
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             StatusCard(
                 modifier = Modifier.weight(1f),
@@ -267,9 +281,11 @@ fun OverallStatusGrid(onNavigate: (HabitSource, Long?) -> Unit) {
                 icon = Icons.Default.AccountBalanceWallet,
                 color = Color(0xFFA2E4B8),
                 iconColor = Color(0xFF42A562),
-                progress = 0.60f,
-                onClick = { onNavigate(HabitSource.FINANCE, null) }
+                progress = progressByCategory["FINANCE"] ?: 0f,
+                // 🔥 GÜNCELLENDİ: Direkt Finance yerine "FINANCE" Hub'ına gidiyor
+                onClick = { onNavigate(HabitSource.HABIT, null, "FINANCE") }
             )
+
             StatusCard(
                 modifier = Modifier.weight(1f),
                 title = stringResource(R.string.grid_work),
@@ -277,8 +293,9 @@ fun OverallStatusGrid(onNavigate: (HabitSource, Long?) -> Unit) {
                 icon = Icons.Default.Work,
                 color = Color(0xFFF0E68C),
                 iconColor = Color(0xFFBCAE44),
-                progress = 0.85f,
-                onClick = { onNavigate(HabitSource.POMODORO, null) }
+                progress = progressByCategory["WORK"] ?: 0f,
+                // 🔥 GÜNCELLENDİ: Direkt Pomodoro yerine "WORK" Hub'ına gidiyor
+                onClick = { onNavigate(HabitSource.HABIT, null, "WORK") }
             )
         }
     }
@@ -295,18 +312,14 @@ fun StatusCard(
     progress: Float,
     onClick: () -> Unit
 ) {
-    val cardColor = MaterialTheme.colorScheme.surface
-    val borderColor = MaterialTheme.colorScheme.outlineVariant
-
     Card(
         modifier = modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = cardColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
-            modifier = Modifier
+            Modifier
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
@@ -318,28 +331,26 @@ fun StatusCard(
                         .background(color.copy(alpha = 0.3f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = iconColor,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Icon(icon, null, tint = iconColor, modifier = Modifier.size(20.dp))
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(Modifier.width(8.dp))
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontWeight = FontWeight.Bold
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(Modifier.height(16.dp))
+
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(6.dp))
+
+            Spacer(Modifier.height(6.dp))
+
             LinearProgressIndicator(
                 progress = progress,
                 modifier = Modifier
@@ -354,54 +365,37 @@ fun StatusCard(
 }
 
 @Composable
-fun DashboardBottomBar(onNavigate: (HabitSource, Long?) -> Unit) {
-    val containerColor = MaterialTheme.colorScheme.surface
-    val selectedColor = MaterialTheme.colorScheme.primary
+fun DashboardBottomBar(
+    onNavigate: (HabitSource, Long?, String?) -> Unit
+) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
 
-    NavigationBar(
-        containerColor = containerColor,
-        tonalElevation = 8.dp
-    ) {
         NavigationBarItem(
             selected = true,
             onClick = { },
-            icon = { Icon(Icons.Default.Home, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_home)) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = selectedColor,
-                selectedTextColor = selectedColor,
-                indicatorColor = Color.Transparent
-            )
+            icon = { Icon(Icons.Default.Home, null) },
+            label = { Text(stringResource(R.string.nav_home)) }
         )
+
         NavigationBarItem(
             selected = false,
-            onClick = { onNavigate(HabitSource.HABIT, null) },
-            icon = { Icon(Icons.Default.TaskAlt, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_tasks)) },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            onClick = { onNavigate(HabitSource.HABIT, null, null) },
+            icon = { Icon(Icons.Default.TaskAlt, null) },
+            label = { Text(stringResource(R.string.nav_tasks)) }
         )
+
         NavigationBarItem(
             selected = false,
             onClick = { },
-            icon = { Icon(Icons.Default.Analytics, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_analytics)) },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            icon = { Icon(Icons.Default.Analytics, null) },
+            label = { Text(stringResource(R.string.nav_analytics)) }
         )
+
         NavigationBarItem(
             selected = false,
-            onClick = { onNavigate(HabitSource.SETTINGS, null) },
-            icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-            label = { Text(stringResource(R.string.nav_settings)) },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            onClick = { onNavigate(HabitSource.SETTINGS, null, null) },
+            icon = { Icon(Icons.Default.Settings, null) },
+            label = { Text(stringResource(R.string.nav_settings)) }
         )
     }
 }
@@ -422,13 +416,12 @@ fun DashboardTopBar(userName: String) {
                 .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center
         ) {
-            val initial = if (userName.isNotEmpty()) userName.take(1).uppercase() else "K"
-            Text(initial, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            val initial = userName.take(1).uppercase()
+            Text(
+                initial,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
     }
 }
-
-// Helper function
-fun Modifier.drawTopBorder(color: Color = Color(0xFFEEEEEE)) = this.then(
-    Modifier.padding(top = 1.dp).background(color).padding(top = 0.dp)
-)

@@ -17,8 +17,14 @@ data class HabitEntity(
     val id: Long = 0,
 
     val name: String,
+
+    // 🔥 YENİ EKLENEN ALAN (Şablon sistemi için gerekli)
+    val description: String? = null,
+
     val icon: String = "💪",
-    val color: String = "#FF6B6B",
+
+    // 🔥 Renk Long formatında
+    val color: Long = 0xFFFF6B6B,
 
     // --- KATEGORİ VE TİP ---
     val category: String = "OTHER",
@@ -30,22 +36,31 @@ data class HabitEntity(
 
     val createdAt: Long = System.currentTimeMillis(),
 
-    // Bildirim
+    // --- BİLDİRİM AYARLARI ---
     val reminderEnabled: Boolean = false,
+
+    // 🔥 ESKİ SİSTEM — UI BUNU KULLANIYOR
     val reminderHour: Int = 9,
     val reminderMinute: Int = 0,
+
+    // 🔥 Opsiyonel yeni format ("09:00")
+    val reminderTime: String? = null,
+
     val reminderDays: String = "1,2,3,4,5,6,7",
 
-    // Takip Durumu
+    // --- TAKİP DURUMU ---
     val currentStreak: Int = 0,
     val longestStreak: Int = 0,
     val lastCompletedDate: String? = null,
     val totalCompletions: Int = 0,
     val completionDates: String = "",
     val strengthScore: Float = 0f,
-    val currentProgress: Int = 0
+    val currentProgress: Int = 0,
+
+    // Diğer alanlar
+    val frequency: String = "Daily",
+    val priority: Int = 1
 ) {
-    // 🔥 EKSİK KALAN HELPER FONKSİYONLAR GERİ EKLENDİ 🔥
 
     fun isCompletedToday(): Boolean {
         val today = getTodayDateString()
@@ -76,7 +91,7 @@ data class HabitEntity(
     fun shouldShowReminderToday(): Boolean {
         if (!reminderEnabled) return false
         val today = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
-        val days = reminderDays.split(",").map { it.toIntOrNull() }
+        val days = reminderDays.split(",").mapNotNull { it.trim().toIntOrNull() }
         return days.contains(today)
     }
 
@@ -95,7 +110,8 @@ data class HabitEntity(
 
         fun getDaysSince(timestamp: Long): Int {
             val diff = System.currentTimeMillis() - timestamp
-            return (diff / (1000 * 60 * 60 * 24)).toInt()
+            val days = (diff / (1000 * 60 * 60 * 24)).toInt()
+            return if (days < 1) 1 else days
         }
     }
 }

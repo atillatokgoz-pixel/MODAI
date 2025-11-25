@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Su Takip DAO
- * Version 2: DrinkType filtreleme eklendi
+ * Version 2: DrinkType filtreleme ve Tarih (String) sorgusu eklendi
  */
 @Dao
 interface WaterDao {
@@ -48,4 +48,11 @@ interface WaterDao {
      */
     @Query("SELECT SUM(amount) FROM water_entries WHERE timestamp >= :startOfDay AND timestamp <= :endOfDay AND drinkType = :type")
     fun getTotalAmountByType(startOfDay: Long, endOfDay: Long, type: String): Flow<Int?>
+
+    /**
+     * 🔥 EKLENDİ: String tarih formatına göre kayıtları getir
+     * CategoryHubScreen içindeki WaterSummaryCard için gerekli.
+     */
+    @Query("SELECT * FROM water_entries WHERE date = :dateString ORDER BY timestamp DESC")
+    fun getEntriesByDate(dateString: String): Flow<List<WaterEntryEntity>>
 }

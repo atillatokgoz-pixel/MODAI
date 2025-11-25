@@ -272,4 +272,5 @@
     <!-- Bottom Navigation Labels -->
     <string name="nav_tasks">Görevler</string>
     <string name="nav_analytics">Analiz</string>
+
 </resources>

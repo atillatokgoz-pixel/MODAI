@@ -1,26 +1,39 @@
 package com.example.naifdeneme.domain.model
 
-enum class HabitSource {
-    WATER,
-    MEDICINE,
-    POMODORO,
-    HABIT,
-    FINANCE,
-    NOTES,
-    SETTINGS
-}
-
+/**
+ * Dashboard, kategori ekranı ve özet kartları için
+ * Tüm alışkanlık türlerini (su, ilaç, pomodoro, normal alışkanlık)
+ * tek bir modelde birleştiriyoruz.
+ */
 data class UnifiedHabit(
     val id: String,
-    val title: String,              // Eski tip düz yazı (Yedek)
-    val titleRes: Int? = null,      // 🔥 YENİ: Çoklu dil için ID (Örn: R.string.water)
+
+    // --- Başlık ---
+    val title: String,          // fallback plain text
+    val titleRes: Int? = null,  // çoklu dil desteği
+
+    // --- Alt açıklama ---
     val subtitle: String,
+
+    // --- Görseller ---
     val icon: String,
     val color: Long,
+
+    // --- İlerleme ---
     val progress: Float,
     val isCompleted: Boolean,
+
+    // --- Navigation Kaynağı ---
     val source: HabitSource,
     val originalId: Long? = null,
-    val actionLabel: String? = null,      // Eski tip buton yazısı
-    val actionLabelRes: Int? = null       // 🔥 YENİ: Çoklu dil için buton ID
+
+    // --- Quick Action ---
+    val actionLabel: String? = null,
+    val actionLabelRes: Int? = null,
+
+    // --- Yeni Eklenen Alanlar ---
+    val category: String? = null,     // Sağlık / Eğitim / Finans vb.
+    val targetValue: Int? = null,     // Kaç dk / kaç bardak vs.
+    val currentValue: Int? = null,    // Güncel ilerleme
+    val unit: String? = null          // "dk", "bardak", "sayfa" vs.
 )
